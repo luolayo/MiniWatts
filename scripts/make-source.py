@@ -35,15 +35,15 @@ SCREENSHOT_SIZE = (1260, 2736)
 DESCRIPTION = """\
 MiniWatts reads the iPhone's own power management sensors and shows what is actually \
 flowing: charger input in watts, what reaches the battery, rail voltages and currents, \
-every temperature sensor placed on a map of the phone, the USB-PD profiles the charger \
-offers, and a history of each charge.
+component temperatures, the USB-PD profiles the charger offers, a history of each charge, \
+and live device upload/download rates.
 
 It reads private system frameworks, so it is sideload-only and can never be on the App \
 Store. It was built and verified on an iPhone Air; sensor names and scaling differ \
 between models, so some readings may be wrong on yours.
 
-Includes a Home Screen and Lock Screen widget, a charging Live Activity and a floating \
-Picture in Picture meter. The widget and the Live Activity live in an app extension: \
+Includes Home Screen and Lock Screen widgets and a power/network Live Activity on the \
+Dynamic Island and Lock Screen. The activity pauses when the app backgrounds. They live in an app extension: \
 signing it takes one more App ID, and LiveContainer cannot run extensions, so installed \
 there MiniWatts has neither.
 

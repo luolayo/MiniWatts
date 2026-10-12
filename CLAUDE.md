@@ -6,7 +6,7 @@ The method for reading the PMU — dlsym'd IOKit, `IOHIDEventSystemClient` on us
 pages `0xff08` and `0xff00` — and the first version of the *Verified blocked* list
 below are taken from
 [ios-charging-monitor](https://github.com/gregsramblings/ios-charging-monitor)
-(ChargeSpeed, MIT). What is built on that is this project's own: the five screens,
+(ChargeSpeed, MIT). What is built on that is this project's own: the monitoring screens,
 the thermal zone mapping, the USB-PD inspector, the energy integration and session
 history, and everything under *Sensor notes*, which the blocked list has since grown
 by several entries.
@@ -58,11 +58,10 @@ by several entries.
   those answers arrive as dumps from people running the release. Nothing it reads may
   be gated on `#if DEBUG` — `PowerMonitor.powerSources` was, and its panel reported no
   power sources in every release build.
-- `Shared/` — the four files compiled into both targets: `ChargeReading`,
+- `Shared/` — the shared reading/state files compiled into both targets: `ChargeReading`,
   `ChargeActivityAttributes`, `WidgetSnapshot`, `ReadingWording`. `Widgets/` — the app
   side of the widget and the live activity (`WidgetPublisher`, `ChargeActivityController`),
-  driven from the tick. `Floating/` — the Picture in Picture readout; see *The floating
-  meter*. `Shortcuts/` — the Shortcuts action; see *Shortcuts*. `Widget/`, at the top
+  driven from the tick. `Shortcuts/` — the Shortcuts action; see *Shortcuts*. `Widget/`, at the top
   level, is the extension itself; see *Widgets and Live Activity*.
 
 ## Swift 6 isolation
@@ -100,8 +99,7 @@ foreground. Three things make that work and they are easy to undo by accident:
 - Settings has *keep the screen on while charging*, default on, applied in `RootView`
   (`isIdleTimerDisabled`) and gated on the phone being plugged in. Sensors can only be
   read while the app runs, so without it the screen locks and a full charge can never be
-  recorded. UIKit stays in the view layer; `Core` only holds the preference. The other
-  way to keep the tick alive is the floating meter, which runs through a locked screen.
+  recorded. UIKit stays in the view layer; `Core` only holds the preference. Backgrounding stops sampling unless independent monitoring or a download has actually been granted runtime. A Live Activity alone never keeps the app alive.
 
 `SessionStore` encodes and writes on its own serial queue, coalescing bursts, and the
 load in `PowerMonitor.init` is a `Task`. At the ceiling — 60 sessions × 1,500 samples —
@@ -217,6 +215,16 @@ current into the cell fell from 0.76 A to 0.51 A; over USB-C the same pair equal
 `UsbHvcMenu` profile's `MaxVoltage` × `MaxCurrent` exactly (5 V × 3 A) while the phone
 drew 3.9 W. Use it for the rating, never for live draw.
 
+**Charging protocol is evidence-limited.** `PowerSnapshot.chargingProtocol` infers
+USB-PD only from a valid `UsbHvcHvcIndex` selecting one unique, complete `UsbHvcMenu`
+entry, and the UI labels it inferred. Menu presence alone and `negotiatedProfile`'s
+voltage/current fallback do not prove the active protocol. Reject missing, duplicate,
+boolean, fractional and sentinel indices rather than defaulting to index zero.
+Wireless input takes precedence: the pad's upstream PD adapter does not identify the
+phone's wireless link. Never guess PD revision, PPS, QC, Qi/Qi2 or MagSafe from volts,
+watts, names, power tiers or undocumented numeric `Source` values.
+`scripts/check-charging-protocol.sh` covers these cases without needing a phone.
+
 **No discharge-current sensor exists.** Discharge power comes from the %-rate estimate
 against a pack energy the user sets in Settings.
 
@@ -270,12 +278,12 @@ app, but **without** `SWIFT_DEFAULT_ACTOR_ISOLATION`: WidgetKit's providers are
 nonisolated, and the extension has no main-actor state to protect.
 
 **Shared code is listed in the pbxproj, not kept in a folder.** The extension compiles
-eight files from `MiniWatts/` — the sensor readers, `PowerSnapshot` and what it depends
-on, and the three files in `MiniWatts/Shared/`. They are named in a
+selected files from `MiniWatts/` — the sensor readers, `PowerSnapshot` and what it depends
+on, and the shared types in `MiniWatts/Shared/`. They are named in a
 `PBXFileSystemSynchronizedBuildFileExceptionSet` on the `MiniWatts` folder with
 `target = WidgetExtension`. For a folder that *is* synchronised into a target an exception
 set removes files; for one that is not, it adds them — confirmed by the extension's build,
-which compiles exactly those eight and nothing else from the app. A new file the widget
+which compiles exactly the listed files and nothing else from the app. A new file the widget
 needs has to be added there, or ticked under Target Membership in Xcode, which writes the
 same entry. Keep shared files free of UI and of the app-only model: the initialiser that
 turns a `ChargeSession` into a `WidgetSnapshot.Session` lives in `MiniWatts/Widgets/` for
@@ -299,34 +307,25 @@ app calls `WidgetCenter.reloadAllTimelines()` on plugging in, unplugging and a f
 session — requests made by the foreground app do not count against the budget. Every widget
 says when its numbers were taken, and whether the extension read them or the app did.
 
-**The live activity is driven by the app alone.** No push updates: those need an APNs server
-and a certificate tied to a developer team, and a re-signed copy could never receive them.
-So `ChargeActivityController` starts an activity only while the app is in front; sends an
-update at most every 5 s and at least every 20 s; gives each update a stale date 45 s out, so
-a suspended app's last reading is shown as paused rather than as current; ends the activity
-two minutes after unplugging, or at once if the setting is turned off; and adopts an activity
-left over from a killed run instead of starting a second one. All of that needs the app to be
-running: unplug while it is suspended, or kill it, and the activity stays up — paused — until
-the app runs again. The End button on the activity is the way out: `EndChargeActivityIntent`
-is a `LiveActivityIntent`, which iOS performs in the app's process, waking it if needed. It
-lives in `ChargeActivityAttributes.swift` because the extension needs the type to draw the
-button and that file is already compiled into both targets. Checked on a device: ended with
-End while still charging, the activity does not come back when the app is next opened, and
-that is accepted as it is. Unplug while the app is suspended and the island greys out and the
-Lock Screen says paused, for as long as the app stays suspended; the next time it runs, the
-island clears at once and the Lock Screen keeps the final state for two more minutes — the
-rule for an ended activity with an `.after` dismissal. `Activity` is not `Sendable`, so
-tasks are handed the activity's id and look it up — holding the instance across a `Task` does
-not compile under Swift 6. `NSSupportsLiveActivities` is set through `INFOPLIST_KEY_*` on the
-app target, like every other Info.plist key.
+**The live activity is driven by the app alone.** No APNs channel. It starts only
+while charging: automatically from foreground sampling, or from the discoverable
+`StartChargingActivityIntent` when a Shortcuts charger automation wakes the app.
+The one-second monitor tick submits at most one update per second, with a 12-second
+stale date; iOS controls rendering cadence. Without approved background runtime,
+backgrounding sends an explicit paused state. Queued writes are serialized so an older
+update cannot clear that pause. Dismissal is respected until unplugging or explicit restart.
+End remains a `LiveActivityIntent` in
+`ChargeActivityAttributes.swift`. Only IDs and Sendable content cross actor boundaries.
+The old `showsLiveActivityWhileCharging` defaults key is retained for migration, while
+the property is now `showsLiveActivity`.
 
-Its compact presentation can show charging power, SoC temperature, battery temperature or
-the hottest sensor, selected in Settings. The expanded and Lock Screen presentations show
-that reading large with a caption, the other three on one line beneath it, the charge level
-bar and the status / "Since …" footnote. **Height is the constraint:** the Lock Screen gives
-an activity about 160 pt, and a first version that stacked each reading as icon, label and
-value three lines high came to about 195 pt — the system clipped its top and bottom, ate the
-padding, and shrank each cell's text by a different factor.
+`ChargeActivityState.swift` holds the portable Codable state. Network readings and the
+pause flag are optional so activities created by earlier app versions still decode.
+Compact mode supports power, temperatures and upload/download rates. Expanded and
+Lock Screen views show one selected metric, battery level, optional battery temperature
+and measurement time. Paused readings remain visible but dimmed. A continued background
+task supplies its own system activity, so the custom activity ends while one is active.
+Keep the Lock Screen layout within its roughly 160-point height budget.
 
 **The widget has its own palette and its own string catalog.** It does not compile
 `Theme.swift`: `Color.mw` wraps a trait-resolution closure, and a widget is archived and drawn
@@ -340,7 +339,99 @@ as the app, and `verify-clean.sh` looks for signatures and profiles at any depth
 extension is also one more App ID for whoever installs it: a free Apple ID gets ten a week,
 and AltStore offers to drop extensions to stay under that, which drops the widget with them.
 
-## The floating meter
+## Network monitoring and current navigation
+
+Navigation is Overview / History / Settings. Battery and power path remain on Overview;
+charger and temperature detail views reuse its navigation stack. Temperature details
+retain the summary, hottest-sensor trend and expandable sensor groups. The heat-map
+illustration is no longer displayed. Backgrounds use a solid adaptive surface.
+
+`NetworkMonitor` uses `NWPathMonitor` for connection state and `getifaddrs` AF_LINK
+counters once per power tick. Only up `enN` and `pdp_ipN` interfaces count; loopback,
+peer-to-peer and VPN tunnel interfaces are excluded. `NetworkRateAccumulator` divides
+byte differences by monotonic elapsed time. It resets after missing interfaces, errors,
+counter reset/wrap, interface-set changes, suspension or gaps over five seconds.
+This measures interface traffic, including LAN traffic, not per-app or ISP throughput.
+`NetworkReading.swift` is explicitly included in WidgetExtension target membership.
+No network requests or extra timer are created. iPhone/VPN validation remains necessary.
+
+`./scripts/check-network.sh` compiles actual shared models and network code with Swift 6
+and MainActor default isolation, then checks rate edge cases and legacy activity decoding.
+It runs with macOS Command Line Tools; full app/widget validation still requires Xcode.
+
+## Explicit traffic downloads
+
+`TrafficConsumer` is app-scoped UI state, injected alongside `PowerMonitor`. Overview's
+network card links to `TrafficConsumerView`. Links belong to explicitly saved custom configurations (no built-in provider groups). Saving stores Codable profiles in private UserDefaults and preserves the selection. Unsaved links are not persisted. Nothing starts automatically.
+`MonitoringRuntime` manages sampling and activity delivery independently of SwiftUI updates. It permits background work only while a continued-processing grant is active; RootView reports scene transitions and manages screen wakefulness.
+
+`TrafficDownloadEngine` uses an ephemeral URLSession with a serial delegate queue.
+All its mutable state is confined to that queue, which is the basis of its explicit
+Sendable conformance. Streamed Data is counted and discarded, not retained. There is
+a pool of 1–64 data tasks (UI default 4), immediate refill after successful short
+resources, and an optional total deadline. The Max speed action uses all 64 slots
+without changing the saved manual count; source and network limits still apply.
+Each request reserves at most 32 MiB and
+is canceled/recycled at its byte budget even if Range is ignored. Temporary URL errors
+and HTTP 408/429/500/502/503/504 retry per worker with bounded backoff; successful
+chunks reset that worker's failure count. Retry-After above 300 seconds is terminal,
+never shortened. Intentional chunk cancellation is successful, not a network error.
+Slot release waits for task completion; terminal events cancel retry timers too. Delegate accounting remains serialized while
+network transfers overlap. Per-task state tracks its byte reservation and redirect
+count; the remaining target is divided across available workers, never duplicated
+for every worker. Any terminal event cancels all tasks and pending refills. Progress
+includes active task count and aggregate bytes/rate. Actual network connections may
+be lower than the selected concurrency due to protocol and system limits. Cache/cookie/credential stores are disabled. Redirects rebuild a GET request
+without forwarding credentials or referrers; strict mode compares HTTPS host + port
+to the initial origin. The optional any-HTTPS policy still blocks cleartext downgrades
+and credentials in URLs. Both modes cap redirect hops and validate the final response.
+TLS trust remains URLSession's default. Progress events carry a sequence number so
+late UI tasks cannot overwrite terminal state. Counts cover response data, not billed
+traffic; in-flight bytes can exceed the configured target.
+
+`./scripts/check-traffic-consumer.sh` compiles the actual model and engine and uses a
+URLProtocol fixture for every URL. It must never fetch third-party resources as a test.
+
+## Continued background downloads and explicit refresh
+
+`TrafficBackgroundCoordinator` implements the injectable `TrafficBackgroundExecution`
+protocol. On iOS 26+ it registers a unique concrete identifier under the permitted
+wildcard, submits with `.fail` (never queue), and starts the engine only after the
+launch handler grants runtime. A 10-second no-callback deadline or denied submission
+falls back to foreground work. iOS 27 uses asynchronous submission; compiler guards
+retain Xcode 26 compatibility. Re-signing with mismatched bundle/identifier prefixes
+falls back explicitly. Progress uses actual downloaded bytes. Every finish cancels
+pending requests, clears callbacks, and completes the task. Expiration can represent
+system pressure or cancellation; do not guess which occurred.
+
+`TrafficConsumer` gates callbacks by run UUID and phase. Pending cancellation never
+starts a transfer; old callbacks cannot affect a new run. Its execution-change callback
+notifies `MonitoringRuntime` directly, including while SwiftUI is inactive. The runtime
+owns one PowerMonitor, one activity controller and widget publisher for the process.
+Sampling continues in the foreground or with an active monitoring/download grant. Monitoring uses its own `BackgroundMonitoringSession`, has no download dependency, and publishes system-card sensor values. Keep a strong runtime
+reference in AppDependencyManager's `LiveActivityActionHandlers` for cold intent launches.
+
+`RefreshChargeActivityIntent` takes fresh sensors and a separate one-second network
+baseline, awaits the ActivityKit update, then releases temporary sampling resources.
+It neither opens a charge session nor starts a download. Concurrent refreshes coalesce.
+One-time data is labeled Snapshot; both snapshot/task fields are optional in Codable
+state for older activities. `StopTrafficActivityIntent` cancels the current pool.
+Download completion is published once URLSession reports invalidation, before releasing
+the background lease. Custom URLProtocol cleanup may trail that callback; fixtures use
+per-run IDs and check eventual cleanup so stale test callbacks cannot pollute a new run.
+The system's continued-processing activity is separate from our custom activity; iOS
+chooses their placement and refresh timing. Device/lock-screen validation is required.
+
+`check-background-lifecycle.sh` exercises the real consumer with mock grants and pools:
+late approval, denial, background transition, expiry, cancellation, callback ordering,
+unsupported OS mode and success reporting. It never submits an OS job or fetches a URL.
+
+## Historical floating meter (removed)
+
+The following notes describe the removed PiP implementation. `Floating/`, its retained
+video layer, audio session and `UIBackgroundModes = audio` have been removed. Do not
+reintroduce background playback as part of Dynamic Island monitoring.
+
 
 `Floating/` puts the live reading in a Picture in Picture window, started by hand from
 Settings. It exists because neither glance can show a number that moves while the app
@@ -499,17 +590,10 @@ that, which is why `Backdrop`'s `.animation(_:value: glow)` restarted an 0.8 s
 full-screen `plusLighter` animation every second on the Thermal tab for a temperature
 that had not moved. Every palette entry is now a `static let`; keep it that way.
 
-`MiniWatts/Info.plist` holds **one key**, `UIBackgroundModes`, and should hold no
-more: everything else in the bundle comes from `GENERATE_INFOPLIST_FILE` plus the
-`INFOPLIST_KEY_*` settings, which are merged with the file. Put new keys in
-`INFOPLIST_KEY_*`. `UIBackgroundModes` is there because it has no build setting —
-Xcode's own spec defines none — and Picture in Picture will not start without it.
-The file had been deleted once before, when its only key was
-`CADisableMinimumFrameDurationOnPhone` (120 Hz for data that changes once a second),
-and Xcode dropped the `INFOPLIST_FILE` setting along with it. Note that the app
-folder is synchronised into the target, so the file also needs a membership exception
-or it is copied into the bundle as a resource as well — the same exception Xcode
-writes for the widget's own `Info.plist`.
+`MiniWatts/Info.plist` declares processing (not audio) and the permitted identifier
+`$(PRODUCT_BUNDLE_IDENTIFIER).traffic.*` and `.monitoring.*`. Xcode expands the prefix at build time. Other
+values come from `GENERATE_INFOPLIST_FILE` and `INFOPLIST_KEY_*`.
+Keep the file's target membership exception so it is not copied as a resource.
 
 `PageScaffold` uses a `LazyVStack`. History puts up to sixty session panels through it.
 
@@ -618,3 +702,27 @@ since these changes.
   numbers come from and mark inferred values as inferred — charging holds are inferred
   from behaviour, and labelled that way.
 - User-facing copy stays in the app's voice; selector-level detail belongs in Raw data.
+
+## Saved configurations, large goals and standalone monitoring
+
+`TrafficConfiguration` stores raw decimal amount text plus MB/GB units. Decimal math
+converts once to checked Int64 bytes; never round through Double or reintroduce the
+10 GB cap. Nil `TrafficDownloadPlan.durationLimit` means no application deadline.
+Worker ceiling division avoids adding before division, so Int64.max cannot overflow.
+`TrafficConsumer` saves named profiles and selected ID only through explicit Save or
+selection actions. Checkpoints are persisted only for a matching saved configuration,
+roughly once a minute and at stop; identical serialized settings are not rewritten. Resume adds the saved offset to fresh engine
+progress and requests only the remainder; never automatically resume on launch.
+
+`BackgroundMonitoringSession` is independent of the consumer. Explicit Start requests
+its own `.monitoring.*` task for a selected window. Every actual sensor tick records its
+date/count and updates progress/subtitle. Runtime continues sampling if either grant is
+active. Idle foreground monitoring must not silently create a misleading Live Activity;
+explicit starts reset previous dismissal state. End Activity stops the monitoring job.
+Grant failures report signing/registration/denial/timeout details instead of claiming
+background monitoring is active. The OS can still terminate a grant; do not promise
+unbounded execution or exact rendering intervals.
+
+The custom Live Activity uses relevance score 100. Its minimal presentation renders
+a compact numeric reading instead of only a glyph, so multi-activity layouts still
+carry a value. Rendering cadence/placement remains controlled by iOS.

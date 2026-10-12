@@ -67,7 +67,9 @@
 				Core/Sensors/IOKitBattery.swift,
 				Core/Sensors/SensorCatalog.swift,
 				Shared/ChargeActivityAttributes.swift,
+				Shared/ChargeActivityState.swift,
 				Shared/ChargeReading.swift,
+				Shared/NetworkReading.swift,
 				Shared/ReadingWording.swift,
 				Shared/WidgetSnapshot.swift,
 			);

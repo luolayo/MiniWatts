@@ -9,6 +9,7 @@ import SwiftUI
 /// the app's.
 struct WidgetPalette {
     let accent: Color
+    let network: Color
     let battery: Color
     let wireless: Color
     let loss: Color
@@ -24,14 +25,15 @@ struct WidgetPalette {
 
     init(_ scheme: ColorScheme) {
         let dark = scheme == .dark
-        accent = Color(rgb: dark ? 0x35DFFF : 0x0086B3)
-        battery = Color(rgb: dark ? 0x3FE08C : 0x0E9B57)
+        accent = Color(rgb: dark ? 0x6AC9AD : 0x13745F)
+        network = Color(rgb: dark ? 0x83B3E6 : 0x3169A7)
+        battery = Color(rgb: dark ? 0x9BD6C6 : 0x398178)
         wireless = Color(rgb: dark ? 0xB49BFF : 0x6B4EE6)
         loss = Color(rgb: dark ? 0xFFB443 : 0xB86A00)
-        muted = Color(rgb: dark ? 0x8C93A6 : 0x60687A)
+        muted = Color(rgb: dark ? 0xA4B3B5 : 0x65777A)
         track = Color(rgb: dark ? 0x8C93A6 : 0x60687A).opacity(0.2)
-        canvasTop = Color(rgb: dark ? 0x0C1018 : 0xF7F9FC)
-        canvas = Color(rgb: dark ? 0x06070A : 0xEEF1F6)
+        canvasTop = Color(rgb: dark ? 0x131819 : 0xF3F5F6)
+        canvas = Color(rgb: dark ? 0x131819 : 0xF3F5F6)
         temperatureCold = Color(rgb: dark ? 0x4DA3FF : 0x2C7BE5)
         temperatureCool = Color(rgb: dark ? 0x3FE08C : 0x0E9B57)
         temperatureWarm = Color(rgb: dark ? 0xF2D14B : 0xB08900)
@@ -68,6 +70,8 @@ struct WidgetPalette {
             return temperatureTint(state.batteryTemperature)
         case .hottestTemperature:
             return temperatureTint(state.hottestTemperature)
+        case .downloadRate, .uploadRate:
+            return network
         }
     }
 }

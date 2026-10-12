@@ -5,3 +5,5 @@ DerivedData/
 xcuserdata/
 *.ipa
 *.xcarchive
+__pycache__/
+*.py[cod]

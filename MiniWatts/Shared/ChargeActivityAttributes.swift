@@ -2,31 +2,8 @@ import ActivityKit
 import AppIntents
 import Foundation
 
-nonisolated enum LiveActivityMetric: String, Codable, Hashable, CaseIterable, Identifiable {
-    case chargingPower
-    case socTemperature
-    case batteryTemperature
-    case hottestTemperature
-
-    var id: Self { self }
-}
-
-/// The existing charge reading plus the extra temperatures needed by the expanded
-/// activity. Keeping the `ChargeReading` intact preserves the widget wording and
-/// charger-bound lifecycle while allowing the compact presentation to be selected.
-nonisolated struct ChargeActivityContentState: Codable, Hashable {
-    var reading: ChargeReading
-    var socTemperature: Double?
-    var hottestTemperature: Double?
-    var hottestSensorName: String?
-    var selectedMetric: LiveActivityMetric
-
-    var date: Date { reading.date }
-    var batteryTemperature: Double? { reading.batteryTemperature }
-}
-
 /// The live activity shown on the Lock Screen, in the Dynamic Island and in StandBy
-/// while a charger is connected.
+/// while power and network monitoring is enabled.
 ///
 /// Compiled into both targets: the app starts and updates the activity, the widget
 /// extension renders it. ActivityKit matches the two by this type.
@@ -40,7 +17,7 @@ nonisolated struct ChargeActivityContentState: Codable, Hashable {
 nonisolated struct ChargeActivityAttributes: ActivityAttributes {
     typealias ContentState = ChargeActivityContentState
 
-    /// When the charger was connected.
+    /// When monitoring began (which may be while unplugged).
     var startedAt: Date
     var startPercent: Int?
 }
@@ -53,14 +30,75 @@ nonisolated struct ChargeActivityAttributes: ActivityAttributes {
 /// the app's process, which iOS wakes for it, so the button closes the activity
 /// without opening MiniWatts. Compiled into both targets: the extension needs the type
 /// to draw the button, the app performs it.
-nonisolated struct EndChargeActivityIntent: LiveActivityIntent {
-    static let title: LocalizedStringResource = "End Live Activity"
-    static var isDiscoverable: Bool { false }
+struct EndChargeActivityIntent: LiveActivityIntent {
+    nonisolated static var title: LocalizedStringResource { "End Live Activity" }
+    nonisolated static var isDiscoverable: Bool { false }
+    @Dependency private var actions: LiveActivityActionHandlers
 
-    func perform() async throws -> some IntentResult {
+    nonisolated func perform() async throws -> some IntentResult {
+        await actions.stopMonitoring()
         for activity in Activity<ChargeActivityAttributes>.activities {
             await activity.end(nil, dismissalPolicy: .immediate)
         }
+        return .result()
+    }
+}
+
+/// Registered at app initialization, including a cold launch from a Live Activity.
+/// Keeping only closures here avoids compiling the app's monitors into the extension.
+nonisolated struct LiveActivityActionHandlers: Sendable {
+    let refresh: @Sendable () async -> Void
+    let stopDownload: @Sendable () async -> Void
+    let stopMonitoring: @Sendable () async -> Void
+    let startCharging: @Sendable () async -> Void
+    let stopCharging: @Sendable () async -> Void
+}
+
+/// Add this action to a Shortcuts "Charger Is Connected" automation to wake the
+/// app process and show a charging activity without opening its interface.
+struct StartChargingActivityIntent: LiveActivityIntent {
+    nonisolated static var title: LocalizedStringResource { "Show Charging Activity" }
+    nonisolated static var description: IntentDescription? {
+        IntentDescription("Show charging readings in the Dynamic Island.")
+    }
+    @Dependency private var actions: LiveActivityActionHandlers
+
+    nonisolated func perform() async throws -> some IntentResult {
+        await actions.startCharging()
+        return .result()
+    }
+}
+
+struct StopChargingActivityIntent: LiveActivityIntent {
+    nonisolated static var title: LocalizedStringResource { "End Charging Activity" }
+    @Dependency private var actions: LiveActivityActionHandlers
+
+    nonisolated func perform() async throws -> some IntentResult {
+        await actions.stopCharging()
+        return .result()
+    }
+}
+
+struct RefreshChargeActivityIntent: LiveActivityIntent {
+    nonisolated static var title: LocalizedStringResource { "Refresh readings" }
+    nonisolated static var isDiscoverable: Bool { false }
+    @Dependency private var actions: LiveActivityActionHandlers
+
+    nonisolated func perform() async throws -> some IntentResult {
+        let actions = actions
+        await actions.refresh()
+        return .result()
+    }
+}
+
+struct StopTrafficActivityIntent: LiveActivityIntent {
+    nonisolated static var title: LocalizedStringResource { "Stop download" }
+    nonisolated static var isDiscoverable: Bool { false }
+    @Dependency private var actions: LiveActivityActionHandlers
+
+    nonisolated func perform() async throws -> some IntentResult {
+        let actions = actions
+        await actions.stopDownload()
         return .result()
     }
 }

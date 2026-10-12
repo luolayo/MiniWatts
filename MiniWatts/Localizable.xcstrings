@@ -1,6 +1,316 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Charging protocol" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "充电协议"
+          }
+        }
+      }
+    },
+    "Unidentified" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未识别"
+          }
+        }
+      }
+    },
+    "Inferred from the selected power profile. PD version and PPS use cannot be determined." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "根据当前选中的充电档位推断。无法确定 PD 版本及是否使用 PPS。"
+          }
+        }
+      }
+    },
+    "Wireless charging detected. Qi, Qi2 and MagSafe cannot be distinguished from this reading." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检测到无线充电。当前读数无法区分 Qi、Qi2 和 MagSafe。"
+          }
+        }
+      }
+    },
+    "iOS did not report enough information to identify the charging protocol." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS 上报的信息不足，无法识别充电协议。"
+          }
+        }
+      }
+    },
+    "PD profiles are reported, but the active charging protocol is unidentified." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已上报 PD 档位，但当前使用的充电协议仍无法识别。"
+          }
+        }
+      }
+    },
+    "Low resistance" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "电阻低"
+          }
+        }
+      }
+    },
+    "Moderate resistance" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "电阻中等"
+          }
+        }
+      }
+    },
+    "High resistance; try another cable" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "电阻偏高，请更换线缆试试"
+          }
+        }
+      }
+    },
+    "All HID services and usage IDs." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部 HID 服务及用法 ID。"
+          }
+        }
+      }
+    },
+    "Accessory and USB-PD registry values." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配件和 USB-PD 注册表数据。"
+          }
+        }
+      }
+    },
+    "Plug in a charger to see its details." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接充电器后显示详情。"
+          }
+        }
+      }
+    },
+    "Wireless input power is unavailable." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无线输入功率不可用。"
+          }
+        }
+      }
+    },
+    "No PD profiles reported." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未报告 PD 档位。"
+          }
+        }
+      }
+    },
+    "Cable resistance is unavailable for wireless charging." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无线充电无法测量线缆电阻。"
+          }
+        }
+      }
+    },
+    "Waiting for enough current to measure voltage drop." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待足够电流以测量压降。"
+          }
+        }
+      }
+    },
+    "Voltage drop detected. Try another cable." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检测到压降，请尝试更换线缆。"
+          }
+        }
+      }
+    },
+    "No temperature sensors found." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到温度传感器。"
+          }
+        }
+      }
+    },
+    "Charge history appears here after unplugging." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拔下充电器后，充电记录会显示在这里。"
+          }
+        }
+      }
+    },
+    "Measured %@ of %@." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实际测量 %@ / %@。"
+          }
+        }
+      }
+    },
+    "Wireless input power is unavailable; cell power is shown." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无线输入功率不可用，显示电芯功率。"
+          }
+        }
+      }
+    },
+    "Plug in to start measuring." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接充电器后开始测量。"
+          }
+        }
+      }
+    },
+    "No power sensors found." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到功率传感器。"
+          }
+        }
+      }
+    },
+    "Show Charging Activity" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示充电实时活动"
+          }
+        }
+      }
+    },
+    "End Charging Activity" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "结束充电实时活动"
+          }
+        }
+      }
+    },
+    "Show charging readings in the Dynamic Island." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在灵动岛显示充电读数。"
+          }
+        }
+      }
+    },
+    "Show while charging" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "充电时显示"
+          }
+        }
+      }
+    },
+    "Background monitoring" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台监测"
+          }
+        }
+      }
+    },
+    "For closed-app starts, add Show Charging Activity to a Charger Connected automation in Shortcuts. Add End Charging Activity for disconnection." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要在不打开应用时自动显示，请在“快捷指令”中创建“充电器已连接”自动化并添加“显示充电实时活动”；断开时添加“结束充电实时活动”。"
+          }
+        }
+      }
+    },
+    "Using device capacity: %lld mAh" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用设备容量：%lld mAh"
+          }
+        }
+      }
+    },
+    "Uses private iOS sensors; sideload only." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 iOS 私有传感器，仅支持侧载。"
+          }
+        }
+      }
+    },
     "" : {
       "shouldTranslate" : false
     },
@@ -2571,6 +2881,1525 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "结束实时活动"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Overview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "总览"
+          }
+        }
+      }
+    },
+    "Advanced" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高级设置"
+          }
+        }
+      }
+    },
+    "About temperature readings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于温度读数"
+          }
+        }
+      }
+    },
+    "Power difference" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "功率差额"
+          }
+        }
+      }
+    },
+    "Charger details" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "充电器详情"
+          }
+        }
+      }
+    },
+    "Temperature details" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "温度详情"
+          }
+        }
+      }
+    },
+    "Power trend" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "功率趋势"
+          }
+        }
+      }
+    },
+    "Detecting network" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在检测网络"
+          }
+        }
+      }
+    },
+    "Offline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未联网"
+          }
+        }
+      }
+    },
+    "Wi-Fi" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi"
+          }
+        }
+      }
+    },
+    "Cellular" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "蜂窝网络"
+          }
+        }
+      }
+    },
+    "Ethernet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以太网"
+          }
+        }
+      }
+    },
+    "Network" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络"
+          }
+        }
+      }
+    },
+    "Network speed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实时网速"
+          }
+        }
+      }
+    },
+    "Download" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载"
+          }
+        }
+      }
+    },
+    "Upload" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上传"
+          }
+        }
+      }
+    },
+    "Download speed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载速率"
+          }
+        }
+      }
+    },
+    "Upload speed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上传速率"
+          }
+        }
+      }
+    },
+    "Dynamic Island" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "灵动岛"
+          }
+        }
+      }
+    },
+    "Dynamic Island and Lock Screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "灵动岛与锁屏"
+          }
+        }
+      }
+    },
+    "Show Live Activity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示实时活动"
+          }
+        }
+      }
+    },
+    "Paused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已暂停"
+          }
+        }
+      }
+    },
+    "Updated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新于"
+          }
+        }
+      }
+    },
+    "Waiting for network samples. Unavailable readings appear as a dash." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待网络采样；无法读取时显示“—”。"
+          }
+        }
+      }
+    },
+    "The power difference includes system use and conversion losses." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "功率差额包含手机自身耗电与转换损耗。"
+          }
+        }
+      }
+    },
+    "Recording pauses in the background and resumes when you return. Missed time is excluded from charge totals." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进入后台后暂停记录，返回后继续；未采样的时间不计入充电总量。"
+          }
+        }
+      }
+    },
+    "Shows traffic through the device's Wi-Fi, cellular and Ethernet interfaces, including other apps and local traffic. No speed-test downloads are performed. VPN tunnel interfaces are excluded to avoid counting the same traffic twice. 1 MB/s = 1,000,000 bytes per second." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示设备 Wi-Fi、蜂窝网络和以太网接口的流量，包含其他 App 和局域网通信。不发起测速下载；排除 VPN 隧道接口，避免重复统计。1 MB/s = 每秒 1,000,000 字节。"
+          }
+        }
+      }
+    },
+    "Choose the compact readout. Expand the Dynamic Island to see power, battery temperature and both network rates. Network monitoring also works when unplugged." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择灵动岛收起时显示的读数。展开后可查看功率、电池温度和上下行速率；未连接充电器时也能监测网速。"
+          }
+        }
+      }
+    },
+    "Live Activity does not keep MiniWatts running. When the app enters the background, readings are marked paused. Open MiniWatts to resume; turn this switch off and on to restart an activity you ended." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实时活动不会让 MiniWatts 持续在后台运行。App 进入后台后，读数会标记为“已暂停”；重新打开 App 即可恢复。若手动结束了活动，可关闭再打开此开关以重新开启。"
+          }
+        }
+      }
+    },
+    "On devices without Dynamic Island, the activity appears on the Lock Screen. Widgets continue to refresh on the system's schedule." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有灵动岛的设备会在锁屏上显示实时活动。桌面小组件仍按系统安排刷新。"
+          }
+        }
+      }
+    },
+    "Traffic consumer" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "流量消耗器"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Custom link" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Same origin only" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "禁止跨域跳转"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Allow HTTPS redirects" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许 HTTPS 跨域跳转"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Enter a valid HTTPS download link without a username or password." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入有效的 HTTPS 下载直链，链接中不能包含用户名或密码。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Choose a download target between 1 MB and 10 GB." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请设置 1 MB 至 10 GB 的下载目标。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Stopped: the redirect is outside the permitted origin." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已停止：链接跳转超出了允许的域名或端口。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Stopped: the link redirected too many times." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已停止：链接重定向次数过多。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "The server did not return a downloadable response." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器未返回可下载的数据。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "This is a webpage or playlist. Enter a direct file link." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这是网页或播放列表，请填写文件下载直链。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "The server returned no data. Check the download link." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器未返回数据，请检查下载链接。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Download failed. Check your connection and link, then try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载失败，请检查网络和链接后重试。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "This link requires authentication. Use an accessible direct download link." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此链接需要登录，请使用可直接访问的下载链接。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "The server returned HTTP %lld." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器返回 HTTP %lld。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Target reached" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已达到下载目标"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Download stopped" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载已停止"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Stopped in background" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已因进入后台而停止"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Time limit reached" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已达到时间上限"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Download failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载失败"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Download link" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载链接"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Paste an HTTPS file link" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴 HTTPS 文件直链"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Groups organize your own links; they do not guarantee carrier-specific data billing. Links are kept only until the app closes." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分组用于管理你提供的链接，不保证计入对应的定向流量。链接仅在本次 App 运行期间保留。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Download limits" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载设置"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Target (MB)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标下载量（MB）"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Target in megabytes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标下载量，单位 MB"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Time limit" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "时间上限"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "1 minute" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 分钟"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "5 minutes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 分钟"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "10 minutes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10 分钟"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "30 minutes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 分钟"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Redirect rule" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跳转规则"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Only the initial HTTPS host and port are allowed. Cross-origin redirects stop the download." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅允许初始 HTTPS 域名与端口，遇到跨域跳转立即停止。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "HTTPS redirects may change the destination domain. The current domain is shown below." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许 HTTPS 链接跳转到其他域名，下方会显示实际请求域名。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Downloads use the current connection. To use cellular data, turn off Wi-Fi in system settings. Carrier billing depends on your plan, even for links from Douyin, Toutiao or Caiyun." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载使用当前网络。若要消耗蜂窝流量，请在系统设置中关闭 Wi-Fi。抖音、头条系或和彩云链接的计费仍以运营商套餐规则为准。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "This download" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本次下载"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Downloaded" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已下载"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Download progress" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载进度"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Stopping…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在停止…"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Stop download" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止下载"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Start download" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始下载"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Max speed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一键最大速度"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Uses up to 64 downloads automatically. A large, fast download source is needed to saturate your connection." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动使用最多 64 路并发。要跑满网速，需要容量足够且响应快的下载源。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Counts downloaded response data, not carrier billing. Cancellation can include a small amount of data already in transit." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这里统计收到的响应数据，并非运营商计费量；停止时可能仍收到少量在途数据。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Downloading: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在下载：%@"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Stop" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Download threads" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "并发线程数"
+          }
+        }
+      }
+    },
+    "Active downloads" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "运行中的下载"
+          }
+        }
+      }
+    },
+    "Choose between 1 and 64 concurrent downloads." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请设置 1 至 64 个并发下载线程。"
+          }
+        }
+      }
+    },
+    "1–64 concurrent downloads. The system and server determine the actual network connections." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持 1–64 路并发下载，实际网络连接数由系统和服务器决定。"
+          }
+        }
+      }
+    },
+    "Downloads run in parallel and keep the screen awake. Received data is discarded. All downloads stop together at the total target, time limit, error or when the app enters the background." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多路下载同时运行并保持屏幕常亮，收到的数据随即丢弃。达到总下载量目标、超时、发生错误或 App 进入后台时，所有下载一起停止。"
+          }
+        }
+      }
+    },
+    "Foreground only" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅前台运行"
+          }
+        }
+      }
+    },
+    "Requesting background execution" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在申请后台运行"
+          }
+        }
+      }
+    },
+    "Background execution approved" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已获准后台运行"
+          }
+        }
+      }
+    },
+    "Background unavailable — foreground only" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未获后台授权，仅前台运行"
+          }
+        }
+      }
+    },
+    "Background execution ended" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台执行已结束"
+          }
+        }
+      }
+    },
+    "Traffic download" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "流量下载"
+          }
+        }
+      }
+    },
+    "Preparing download" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在准备下载"
+          }
+        }
+      }
+    },
+    "Refresh readings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷新读数"
+          }
+        }
+      }
+    },
+    "Snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单次采样"
+          }
+        }
+      }
+    },
+    "Continue in background" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许后台继续下载"
+          }
+        }
+      }
+    },
+    "Requires iOS 26 or later and system approval. If approval is unavailable, downloads run only in the foreground. The system may end background execution early." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要 iOS 26 及以上，并获得系统批准；未获批准时仅在前台运行。系统可能提前结束后台任务。"
+          }
+        }
+      }
+    },
+    "Wait for background approval before leaving the app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请等到显示“已获准后台运行”后再切换 App。"
+          }
+        }
+      }
+    },
+    "Downloads run in parallel and discard received data. They stop together at the total target, time limit, error or system cancellation. Background downloads require approval; otherwise leaving the app stops them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多路下载接收后即丢弃数据，达到总目标、超时、发生错误或系统取消时一起停止。后台下载须先获准，否则切换 App 会停止任务。"
+          }
+        }
+      }
+    },
+    "Recording continues during an approved background download. Otherwise it pauses until you return. Missed time is excluded from charge totals." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "获准后台下载期间会继续采样和记录；其他情况下，进入后台后暂停，返回后继续。未采样的时间不计入充电总量。"
+          }
+        }
+      }
+    },
+    "During an approved background download, MiniWatts keeps sampling and sending updates. Display timing is controlled by iOS. Otherwise readings pause; use Refresh on the activity to take a new one-time reading without opening the app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "获准后台下载期间会继续采样并发送更新，实际显示时机由 iOS 决定。其他情况下读数会暂停；点击实时活动上的刷新按钮，可不打开 App 进行一次新采样。"
+          }
+        }
+      }
+    },
+    "Live power monitoring" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "充电与网络实时监测"
+          }
+        }
+      }
+    },
+    "Background execution requires iOS 26 or later." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台运行需要 iOS 26 或更新系统。"
+          }
+        }
+      }
+    },
+    "Background identifiers do not match the signed app. Preserve the bundle identifier when signing, or update the permitted background identifiers." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "签名后的 App 标识与后台任务标识不匹配。请签名时保留 Bundle ID，或同步修改允许的后台任务标识。"
+          }
+        }
+      }
+    },
+    "The system refused background registration." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统拒绝注册后台任务。"
+          }
+        }
+      }
+    },
+    "The system did not start background execution. Keep the app open and retry." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统未启动后台任务，请保持 App 在前台后重试。"
+          }
+        }
+      }
+    },
+    "The system denied background execution. Check Background App Refresh or try again later." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统未授予后台运行时间，请检查“后台 App 刷新”或稍后重试。"
+          }
+        }
+      }
+    },
+    "Background monitoring requires iOS 26 or later." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台实时监测需要 iOS 26 或更新系统。"
+          }
+        }
+      }
+    },
+    "Background monitoring was not approved. Keep the app open or retry." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台实时监测未获批准，请保持 App 打开或重试。"
+          }
+        }
+      }
+    },
+    "The system ended background monitoring. Start a new monitoring session to resume." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统已结束后台监测，点击开始可重新申请。"
+          }
+        }
+      }
+    },
+    "Background monitoring was not ready before leaving the app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换 App 时后台监测尚未获准，请返回后重新开启。"
+          }
+        }
+      }
+    },
+    "Background live monitoring" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台实时监测"
+          }
+        }
+      }
+    },
+    "Last sample: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近采样：%@"
+          }
+        }
+      }
+    },
+    "%lld samples recorded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已采样 %lld 次"
+          }
+        }
+      }
+    },
+    "Stop monitoring" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止监测"
+          }
+        }
+      }
+    },
+    "Monitoring duration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "监测时长"
+          }
+        }
+      }
+    },
+    "1 hour" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 小时"
+          }
+        }
+      }
+    },
+    "4 hours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4 小时"
+          }
+        }
+      }
+    },
+    "8 hours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "8 小时"
+          }
+        }
+      }
+    },
+    "Start background monitoring" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启后台实时监测"
+          }
+        }
+      }
+    },
+    "No download is needed. Start monitoring here and wait for approval before switching apps. If iOS ends the session, the status and readings are marked stopped." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无需运行流量消耗器。在这里开启并等到后台获准后即可切换 App；如果 iOS 结束任务，会明确显示停止状态。"
+          }
+        }
+      }
+    },
+    "Start background live monitoring to keep power, temperature and network readings updating without a download. Approved download tasks can also support sampling. iOS controls display timing and may end background execution." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启“后台实时监测”即可独立更新功率、温度和网速，无需下载流量。获准的下载任务也可支持采样。显示时机由 iOS 控制，系统可能结束后台任务。"
+          }
+        }
+      }
+    },
+    "Enter a positive data amount in MB or GB." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入有效的正数流量，单位可选 MB 或 GB。"
+          }
+        }
+      }
+    },
+    "Saved settings could not be read. Existing storage was not changed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取已保存配置，原有存储未被修改。"
+          }
+        }
+      }
+    },
+    "Settings saved. This configuration will be available next time." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配置已保存，下次打开可直接选择。"
+          }
+        }
+      }
+    },
+    "Settings could not be saved. Try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配置保存失败，请重试。"
+          }
+        }
+      }
+    },
+    "Saved configurations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存配置"
+          }
+        }
+      }
+    },
+    "New configuration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建配置"
+          }
+        }
+      }
+    },
+    "Configuration name (optional)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配置名称（可选）"
+          }
+        }
+      }
+    },
+    "Save settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存设置"
+          }
+        }
+      }
+    },
+    "Delete configuration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除配置"
+          }
+        }
+      }
+    },
+    "Unsaved changes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前修改尚未保存"
+          }
+        }
+      }
+    },
+    "Save the link and all download settings here. Saved configurations and their latest saved progress are available after reopening the app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存链接和下载参数后，下次打开可直接选择。已保存配置会记录最近的下载进度，可继续剩余目标。"
+          }
+        }
+      }
+    },
+    "Target data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标流量"
+          }
+        }
+      }
+    },
+    "Data unit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "流量单位"
+          }
+        }
+      }
+    },
+    "No time limit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不限时"
+          }
+        }
+      }
+    },
+    "Downloads use the current connection. To use cellular data, turn off Wi-Fi in system settings. Carrier billing depends on your plan and download link." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载使用当前网络。使用蜂窝流量前请关闭 Wi-Fi，计费以运营商套餐和实际下载链接为准。"
+          }
+        }
+      }
+    },
+    "Delete this saved configuration?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除这份已保存配置？"
+          }
+        }
+      }
+    },
+    "Resume remaining %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续剩余 %@"
+          }
+        }
+      }
+    },
+    "Connection failed (URL error %lld)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接失败（URL 错误 %lld）。"
+          }
+        }
+      }
+    },
+    "Automatic retries: %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动重试：%lld 次"
+          }
+        }
+      }
+    },
+    "Reconnecting %lld download threads…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在重连 %lld 个下载线程…"
+          }
+        }
+      }
+    },
+    "Received data is discarded from memory without saving a download file or disk cache. Only settings and a small progress record are saved; progress is saved once a minute and on stop." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载内容在内存中接收后即丢弃，不保存下载文件或磁盘缓存。仅保存设置和少量进度记录，进度每分钟及停止时保存一次。"
+          }
+        }
+      }
+    },
+    "Temporary connection errors retry automatically without resetting the downloaded total. Each thread retries up to 6 consecutive failures. Expired links and access errors require a new link. Background execution remains subject to system approval." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "临时网络错误会自动重试，已下载总量不会清零。每个线程连续失败最多重试 6 次。链接过期或无权限时需要更换链接；后台运行仍须系统批准。"
           }
         }
       }

@@ -15,7 +15,7 @@ struct DevicesView: View {
     }
 
     var body: some View {
-        PageScaffold("Devices", glow: .mwWireless) {
+        PageScaffold("Devices") {
             thisPhonePanel
             if groups.isEmpty {
                 accessoriesPlaceholder

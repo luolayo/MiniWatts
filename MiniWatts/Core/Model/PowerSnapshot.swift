@@ -11,6 +11,15 @@ nonisolated enum ChargeHoldState: String, Codable, Hashable, Sendable {
     case unknown
 }
 
+/// The protocol of this connection, limited to evidence available to the app.
+/// A selected HVC menu entry suggests USB-PD; it is not a decoded PD handshake.
+nonisolated enum ChargingProtocol: Equatable, Sendable {
+    case notConnected
+    case usbPDInferred
+    case unidentifiedWired
+    case unidentifiedWireless
+}
+
 /// One advertised USB-PD / HVC power profile from the adapter's menu.
 nonisolated struct PDProfile: Identifiable, Hashable {
     let index: Int
@@ -402,6 +411,15 @@ nonisolated struct PowerSnapshot: @unchecked Sendable {
 
     var adapterPowerTier: Int? { int("AdapterPowerTier", in: adapter) }
 
+    /// Never identify a protocol from watts, voltage, a name or an undocumented
+    /// numeric Source value. A wireless pad's upstream PD supply also says
+    /// nothing about the protocol used between the pad and the phone.
+    var chargingProtocol: ChargingProtocol {
+        guard externalConnected else { return .notConnected }
+        if adapterIsWireless { return .unidentifiedWireless }
+        return selectedAdapterProfile == nil ? .unidentifiedWired : .usbPDInferred
+    }
+
     // MARK: - The cable, by its effect
 
     /// The smallest input current at which a voltage drop means anything. Below it
@@ -466,22 +484,33 @@ nonisolated struct PowerSnapshot: @unchecked Sendable {
     /// Every profile the adapter advertised in its PD menu.
     var adapterProfiles: [PDProfile] {
         guard let menu = adapter?["UsbHvcMenu"] as? [[String: Any]] else { return [] }
-        return menu.compactMap { entry in
-            guard let voltage = int("MaxVoltage", in: entry),
-                  let current = int("MaxCurrent", in: entry) else { return nil }
-            return PDProfile(index: int("Index", in: entry) ?? 0,
+        let profiles: [PDProfile] = menu.compactMap { entry in
+            guard let index = Self.profileInteger("Index", in: entry), index < 255,
+                  let voltage = Self.profileInteger("MaxVoltage", in: entry), voltage > 0,
+                  let current = Self.profileInteger("MaxCurrent", in: entry), current > 0
+            else { return nil }
+            return PDProfile(index: index,
                              voltageMillivolts: voltage,
                              currentMilliamps: current)
         }
+        // Duplicate indices are ambiguous and cannot safely identify an active
+        // profile. They also cannot be used as stable IDs by the profile list.
+        let byIndex = Dictionary(grouping: profiles, by: \.index)
+        return profiles.filter { byIndex[$0.index]?.count == 1 }
         .sorted { $0.voltageMillivolts < $1.voltageMillivolts }
     }
 
-    /// The profile currently in use, from the adapter's active index.
+    /// Only an explicit, valid menu selection is evidence of a PD connection.
+    /// A fallback voltage/current pair is useful as a ceiling, but not as proof.
+    var selectedAdapterProfile: PDProfile? {
+        guard let active = Self.profileInteger("UsbHvcHvcIndex", in: adapter), active < 255
+        else { return nil }
+        return adapterProfiles.first { $0.index == active }
+    }
+
+    /// The selected profile, or the adapter's reported ceiling if no menu selection exists.
     var negotiatedProfile: PDProfile? {
-        if let active = int("UsbHvcHvcIndex", in: adapter),
-           let profile = adapterProfiles.first(where: { $0.index == active }) {
-            return profile
-        }
+        if let profile = selectedAdapterProfile { return profile }
         if let voltage = adapterVoltageMillivolts, let current = adapterCurrentMilliamps, voltage > 0 {
             return PDProfile(index: -1, voltageMillivolts: voltage, currentMilliamps: current)
         }
@@ -495,6 +524,16 @@ nonisolated struct PowerSnapshot: @unchecked Sendable {
     }
 
     // MARK: - Helpers
+
+    /// These are unsigned profile fields, not wrapped signed battery readings.
+    /// Reject booleans, fractional values and overflow instead of inventing an index.
+    private static func profileInteger(_ key: String, in dictionary: [String: Any]?) -> Int? {
+        guard let number = dictionary?[key] as? NSNumber,
+              CFGetTypeID(number) != CFBooleanGetTypeID(),
+              let value = Int(exactly: number.doubleValue), value >= 0, value <= Int32.max
+        else { return nil }
+        return value
+    }
 
     /// IOKit reports some signed 32-bit values as wrapped unsigned numbers
     /// (a −658 mA discharge arrives as 18446744073709550958).

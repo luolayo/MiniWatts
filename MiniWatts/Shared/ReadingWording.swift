@@ -3,7 +3,7 @@ import Foundation
 /// How a `ChargeReading` is worded, in one place.
 ///
 /// Compiled into both targets: the Power tab, the widget, the live activity and the
-/// floating meter all describe the same reading, and they have already drifted once.
+/// Shortcuts all describe the same reading, and they have already drifted once.
 /// Copy only — no views. The catalogs of both targets carry these strings.
 nonisolated extension ChargeReading.Source {
     var caption: LocalizedStringResource {

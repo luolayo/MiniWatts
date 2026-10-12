@@ -18,24 +18,25 @@ nonisolated extension Color {
     }
 
     /// Page background, bottom of the canvas gradient.
-    static let mwCanvas = Color.mw(0xEEF1F6, 0x06070A)
+    static let mwCanvas = Color.mw(0xF3F5F6, 0x131819)
     /// Page background, top of the canvas gradient — a cool cast, so the screen
     /// reads as an instrument rather than a form.
-    static let mwCanvasTop = Color.mw(0xF7F9FC, 0x0C1018)
-    static let mwCard = Color.mw(0xFFFFFF, 0x14171F)
+    static let mwCanvasTop = mwCanvas
+    static let mwCard = Color.mw(0xFFFFFF, 0x1D2427)
     static let mwCardStroke = Color.mw(0x0A0A0A, 0xFFFFFF).opacity(0.08)
     static let mwGrid = Color.mw(0x2B3A55, 0x6C8CC7).opacity(0.10)
 
     /// Adapter side: what arrives from the charger.
-    static let mwAccent = Color.mw(0x0086B3, 0x35DFFF)
+    static let mwAccent = Color.mw(0x13745F, 0x6AC9AD)
     /// Battery side: what actually reaches the cell.
-    static let mwBattery = Color.mw(0x0E9B57, 0x3FE08C)
+    static let mwBattery = Color.mw(0x398178, 0x9BD6C6)
+    static let mwNetwork = Color.mw(0x3169A7, 0x83B3E6)
     /// Power not observed at the battery rail.
-    static let mwLoss = Color.mw(0xB86A00, 0xFFB443)
+    static let mwLoss = Color.mw(0x9B6A26, 0xDDB67D)
     static let mwDanger = Color.mw(0xC5342B, 0xFF6058)
     /// Wireless / MagSafe.
     static let mwWireless = Color.mw(0x6B4EE6, 0xB49BFF)
-    static let mwMuted = Color.mw(0x60687A, 0x8C93A6)
+    static let mwMuted = Color.mw(0x65777A, 0xA4B3B5)
 
     // The five steps of the temperature scale, as constants rather than as calls
     // to `mw` inside the switch below.
@@ -85,22 +86,20 @@ nonisolated extension UIColor {
 }
 
 nonisolated enum Theme {
-    static let cardRadius: CGFloat = 18
-    static let cardPadding: CGFloat = 16
+    static let cardRadius: CGFloat = 20
+    static let cardPadding: CGFloat = 18
 
     static func gradient(_ color: Color) -> LinearGradient {
-        LinearGradient(colors: [color.opacity(0.55), color],
+        LinearGradient(colors: [color, color],
                        startPoint: .topLeading,
                        endPoint: .bottomTrailing)
     }
 }
 
 extension View {
-    /// The uppercase, tracked micro-label used above every readout.
+    /// Quiet labels keep the numbers, rather than panel chrome, prominent.
     func mwCaption() -> some View {
-        font(.system(size: 11, weight: .semibold, design: .rounded))
-            .textCase(.uppercase)
-            .tracking(0.9)
+        font(.subheadline.weight(.medium))
             .foregroundStyle(Color.mwMuted)
     }
 
@@ -117,7 +116,7 @@ extension View {
     /// not left out: a readout that ends up inside an animated transaction would
     /// otherwise cross-fade.
     func mwReadout(size: CGFloat, weight: Font.Weight = .semibold) -> some View {
-        font(.system(size: size, weight: weight, design: .rounded))
+        font(.system(size: size, weight: weight))
             .monospacedDigit()
             .contentTransition(.identity)
     }

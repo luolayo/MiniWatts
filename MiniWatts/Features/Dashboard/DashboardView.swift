@@ -2,51 +2,72 @@ import SwiftUI
 
 struct DashboardView: View {
     @Environment(PowerMonitor.self) private var monitor
-    @State private var showingSettings = false
+    @Environment(TrafficConsumer.self) private var trafficConsumer
+    @State private var showingActivitySettings = false
 
     private var snapshot: PowerSnapshot { monitor.snapshot }
     private var plugged: Bool { snapshot.externalConnected }
 
     var body: some View {
-        PageScaffold("MiniWatts", glow: glowColor, toolbar: AnyView(toolbarButtons)) {
+        PageScaffold("MiniWatts", toolbar: AnyView(toolbarButtons)) {
             heroPanel
             if monitor.thermal.state.isThrottling { throttleBanner }
+            networkPanel
             batteryPanel
             breakdownPanel
+            temperaturePanel
             livePanel
-            sessionPanel
+            if monitor.currentSession != nil { sessionPanel }
             if !monitor.sensorsAvailable { sensorNote }
         }
-        .sheet(isPresented: $showingSettings) { SettingsView() }
+        .sheet(isPresented: $showingActivitySettings) { LiveActivitySettingsView() }
     }
 
-    private var glowColor: Color {
+    private var statusColor: Color {
         if monitor.thermal.state.isThrottling { return .mwDanger }
         if snapshot.isWirelessInput { return .mwWireless }
         return plugged ? .mwAccent : .mwLoss
     }
 
     private var toolbarButtons: some View {
-        Button { showingSettings = true } label: { Image(systemName: "gearshape") }
-            .tint(.mwAccent)
+        Button { showingActivitySettings = true } label: {
+            Label("Dynamic Island", systemImage: "wave.3.right")
+                .font(.subheadline)
+        }
+        .tint(.mwAccent)
     }
-
-    // MARK: Hero
 
     private var heroPanel: some View {
         Panel {
-            VStack(spacing: 14) {
-                PowerRing(inputWatts: monitor.headline?.watts,
-                          batteryWatts: plugged && snapshot.inputWatts != nil ? snapshot.batteryWatts : nil,
-                          fullScale: fullScale,
-                          caption: monitor.headline?.caption,
-                          tint: glowColor)
-                    .padding(.top, 4)
-
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    if let caption = monitor.headline?.caption {
+                        Text(caption).mwCaption()
+                    } else {
+                        Text("Charging power").mwCaption()
+                    }
+                    Spacer(minLength: 8)
+                    Text(snapshot.statusText)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(statusColor)
+                }
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(monitor.headline.map { Formatting.watts($0.watts) } ?? "—")
+                        .mwReadout(size: 60, weight: .medium)
+                    Text(verbatim: "W")
+                        .font(.title3)
+                        .foregroundStyle(Color.mwMuted)
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                if plugged, let voltage = snapshot.usbInputVoltage,
+                   let current = snapshot.usbInputCurrent, !snapshot.isWirelessInput {
+                    Text(verbatim: String(format: "USB-C · %.2f V × %.2f A", voltage, current))
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(Color.mwMuted)
+                }
                 FlowRow(spacing: 6) {
-                    Pill(text: Text(snapshot.statusText),
-                         systemImage: plugged ? "bolt.fill" : "battery.50",
-                         tint: plugged ? .mwAccent : .mwMuted)
                     if snapshot.isWirelessInput {
                         Pill(text: Text("MagSafe"), systemImage: "wave.3.right", tint: .mwWireless)
                     }
@@ -59,38 +80,85 @@ struct DashboardView: View {
                     if monitor.thermal.lowPowerMode || snapshot.lowPowerMode {
                         Pill(text: Text("Low Power"), systemImage: "battery.25", tint: .mwLoss)
                     }
-                    Pill(text: Text(monitor.thermal.state.title),
-                         systemImage: monitor.thermal.state.symbol,
-                         tint: thermalTint)
                 }
             }
         }
     }
 
-    /// True while charging wirelessly with no way to measure what comes in.
     private var wirelessInputUnmeasurable: Bool {
         plugged && snapshot.inputWatts == nil && snapshot.isWirelessInput
     }
 
-
-
-    /// Full scale is the adapter's nameplate when it declares one, so the dial
-    /// shows how much of the charger is actually being used.
-    private var fullScale: Double {
-        guard plugged else { return 15 }
-        // With no input reading the dial is showing battery-side watts, which never
-        // exceed what the adapter can supply — but a low wireless ceiling would put
-        // the needle near full for an ordinary trickle, so keep a floor under it.
-        if snapshot.inputWatts == nil { return max(snapshot.adapterRatedWatts ?? 25, 10) }
-        return max(snapshot.adapterRatedWatts ?? 30, 5)
+    private var networkPanel: some View {
+        let network = monitor.network.reading
+        let download = NetworkRateText(network.downloadBytesPerSecond)
+        let upload = NetworkRateText(network.uploadBytesPerSecond)
+        return Panel("Network speed", systemImage: "arrow.up.arrow.down",
+                     trailing: Text(network.connection.title)) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 16) {
+                    Metric(caption: "Download", value: download.value, unit: download.unit,
+                           tint: .mwNetwork, size: 30)
+                    Metric(caption: "Upload", value: upload.value, unit: upload.unit,
+                           tint: .mwNetwork, size: 30)
+                }
+                Divider()
+                HStack {
+                    NavigationLink {
+                        TrafficConsumerView()
+                    } label: {
+                        detailLinkLabel("Traffic consumer")
+                    }
+                    .buttonStyle(.plain)
+                    if trafficConsumer.isRunning {
+                        Button("Stop", role: .destructive) { trafficConsumer.stop() }
+                            .disabled(trafficConsumer.isStopping)
+                    }
+                }
+                if trafficConsumer.isRunning {
+                    Text("Downloading: \(TrafficByteText.format(trafficConsumer.progress.receivedBytes))")
+                        .font(.caption)
+                        .foregroundStyle(Color.mwNetwork)
+                }
+            }
+        }
     }
 
-    private var thermalTint: Color {
-        switch monitor.thermal.state {
-        case .nominal: return .mwBattery
-        case .fair: return .mwLoss
-        default: return .mwDanger
+    private var temperaturePanel: some View {
+        Panel("Thermal", systemImage: "thermometer.medium",
+              trailing: Text(monitor.thermal.state.title)) {
+            VStack(spacing: 16) {
+                HStack(alignment: .top, spacing: 10) {
+                    temperatureMetric("SoC", value: snapshot.socTemperature)
+                    temperatureMetric("Charge IC", value: snapshot.chargerTemperature)
+                    temperatureMetric("Hottest", value: snapshot.hottestSensor?.value)
+                }
+                Divider()
+                NavigationLink {
+                    ThermalView(isDetail: true)
+                } label: {
+                    detailLinkLabel("Temperature details")
+                }
+                .buttonStyle(.plain)
+            }
         }
+    }
+
+    private func temperatureMetric(_ title: LocalizedStringResource, value: Double?) -> some View {
+        Metric(caption: title,
+               value: value.map { String(format: "%.1f", $0) } ?? "—",
+               unit: "°C", tint: .primary, size: 20)
+    }
+
+    private func detailLinkLabel(_ title: LocalizedStringResource) -> some View {
+        HStack {
+            Text(title).font(.subheadline)
+            Spacer()
+            Image(systemName: "chevron.right").font(.caption.weight(.semibold))
+        }
+        .foregroundStyle(Color.mwAccent)
+        .frame(minHeight: 32)
+        .contentShape(Rectangle())
     }
 
     private var throttleBanner: some View {
@@ -184,8 +252,14 @@ struct DashboardView: View {
                 if let input = snapshot.inputWatts, input > 0.2, let battery = snapshot.batteryWatts, battery > 0 {
                     PowerFlowBar(input: input, toBattery: battery)
                 }
+                NavigationLink {
+                    AdapterView(isDetail: true)
+                } label: {
+                    detailLinkLabel("Charger details")
+                }
+                .buttonStyle(.plain)
                 if wirelessInputUnmeasurable {
-                    EmptyNote(text: "Charging wirelessly. The charge IC exposes the coil's voltage but no current to pair with it, so the power coming in cannot be measured — only what reaches the cell. The figure the charger reports about itself is a ceiling, not a reading, and does not move.",
+                    EmptyNote(text: "Wireless input power is unavailable; cell power is shown.",
                               systemImage: "wave.3.right")
                 }
             }
@@ -200,8 +274,8 @@ struct DashboardView: View {
     // MARK: Live
 
     private var livePanel: some View {
-        Panel("Last 3 minutes", systemImage: "waveform.path.ecg",
-              trailing: Text("\(monitor.live.count) samples")) {
+        Panel("Power trend", systemImage: "waveform.path.ecg",
+              trailing: Text("Last 3 minutes")) {
             VStack(alignment: .leading, spacing: 8) {
                 LivePowerChart(samples: monitor.live)
                 HStack(spacing: 14) {
@@ -238,7 +312,7 @@ struct DashboardView: View {
                     }
                 }
             } else {
-                EmptyNote(text: "Plug in to start measuring. Energy is integrated from the live sensors while the app is open, and saved to History when you unplug.",
+                EmptyNote(text: "Plug in to start measuring.",
                           systemImage: "powerplug")
             }
         }
@@ -246,7 +320,7 @@ struct DashboardView: View {
 
     private var sensorNote: some View {
         Panel("Sensors", systemImage: "sensor") {
-            EmptyNote(text: "No HID power sensors were found. On the simulator this is expected — IOKit reads the Mac's battery and the phone's PMU sensors do not exist. Run on the device for real numbers.",
+            EmptyNote(text: "No power sensors found.",
                       systemImage: "exclamationmark.triangle")
         }
     }

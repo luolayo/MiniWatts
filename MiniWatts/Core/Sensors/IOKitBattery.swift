@@ -9,7 +9,8 @@ import Foundation
 /// What actually survives the iOS sandbox (verified on iOS 26):
 /// - `IOPMPowerSource` registry: only `BatteryInstalled` and `ExternalConnected`.
 /// - powerd `IOPSCopyPowerSourcesInfo`: percent, charging flags, low power mode.
-/// - powerd `IOPSCopyExternalPowerAdapterDetails`: the full USB-PD handshake.
+/// - powerd `IOPSCopyExternalPowerAdapterDetails`: adapter description and power
+///   profile menu/selection, not PD handshake packets or a protocol revision.
 /// - `IOPSCopyChargeStatus`: refused (kIOReturnNotPrivileged), kept for the record.
 nonisolated final class IOKitBattery {
     private typealias ServiceMatchingFn =

@@ -1,21 +1,23 @@
 import SwiftUI
 
 struct AdapterView: View {
+    var isDetail = false
     @Environment(PowerMonitor.self) private var monitor
 
     private var snapshot: PowerSnapshot { monitor.snapshot }
 
     var body: some View {
-        PageScaffold("Adapter", glow: snapshot.isWirelessInput ? .mwWireless : .mwAccent) {
+        PageScaffold("Adapter", isDetail: isDetail) {
             if snapshot.externalConnected {
                 headlinePanel
+                protocolPanel
                 identityPanel
                 profilesPanel
                 railsPanel
                 connectionPanel
             } else {
                 Panel("Not connected", systemImage: "powerplug") {
-                    EmptyNote(text: "Plug in a charger to read its handshake. USB-PD adapters advertise a menu of voltage/current profiles; the phone picks one and this page shows which, alongside what is actually flowing.",
+                    EmptyNote(text: "Plug in a charger to see its details.",
                               systemImage: "cable.connector")
                 }
                 railsPanel
@@ -55,45 +57,55 @@ struct AdapterView: View {
                 }
 
                 if snapshot.inputWatts == nil, snapshot.adapterIsWireless {
-                    EmptyNote(text: "Wireless charging has no input-current sensor, so there is nothing to compare against the rating. The voltage and current below are the profile the pad negotiated — a ceiling that stays put while the actual draw moves.",
+                    EmptyNote(text: "Wireless input power is unavailable.",
                               systemImage: "wave.3.right")
-                } else if let reason = headroomReason {
-                    Text(reason)
-                        .font(.caption)
-                        .foregroundStyle(Color.mwMuted)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
     }
 
-    /// The interesting question on this page is why the phone is not pulling the
-    /// full rating, so the most likely explanation is spelled out rather than left
-    /// for the user to infer from four separate numbers.
-    private var headroomReason: LocalizedStringResource? {
-        guard let utilisation = snapshot.adapterUtilisation, utilisation < 0.75 else { return nil }
-        if monitor.thermal.state.isThrottling {
-            return "Well under the adapter's rating while system thermal pressure is high. Charge current may be limited by iOS."
+    // MARK: Identity
+
+    private var protocolPanel: some View {
+        Panel("Charging protocol", systemImage: "bolt.horizontal") {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    if snapshot.chargingProtocol == .usbPDInferred {
+                        Text(verbatim: "USB-PD")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(Color.mwAccent)
+                        Pill(text: Text("inferred"), tint: .mwMuted)
+                    } else {
+                        Text("Unidentified")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(Color.mwMuted)
+                    }
+                }
+                DetailRow(label: "Negotiated max", value: snapshot.negotiatedProfile?.label)
+                Text(protocolExplanation)
+                    .font(.caption)
+                    .foregroundStyle(Color.mwMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        if snapshot.isChargingOnHold {
-            return "Charging is on hold, so almost nothing is being drawn. Optimized Battery Charging or a charge limit looks exactly like this."
-        }
-        if let percent = snapshot.percent, percent > 80 {
-            return "Above 80% the charger tapers to constant-voltage, so low draw here is normal battery chemistry, not a weak charger."
-        }
-        if snapshot.isWirelessInput {
-            return "Wireless charging is capped well below what the adapter could deliver over the cable."
-        }
-        // Checked after heat, a hold and a nearly-full battery, because all three
-        // explain a low draw on their own. What is left is a phone that would take
-        // more if the voltage could stand it.
-        if isSagging {
-            return "The voltage at the port has collapsed well below what was negotiated, and the phone is holding the current down to keep it up. That is the cable or the plugs, not the charger."
-        }
-        return "Drawing well under the adapter's rating. A thin cable, a shared port, or a profile the phone declined can all do this."
     }
 
-    // MARK: Identity
+    private var protocolExplanation: LocalizedStringResource {
+        switch snapshot.chargingProtocol {
+        case .usbPDInferred:
+            "Inferred from the selected power profile. PD version and PPS use cannot be determined."
+        case .unidentifiedWireless:
+            "Wireless charging detected. Qi, Qi2 and MagSafe cannot be distinguished from this reading."
+        case .unidentifiedWired:
+            if snapshot.adapterProfiles.isEmpty {
+                "iOS did not report enough information to identify the charging protocol."
+            } else {
+                "PD profiles are reported, but the active charging protocol is unidentified."
+            }
+        case .notConnected:
+            "Plug in a charger to see its details."
+        }
+    }
 
     private var identityPanel: some View {
         Panel("Handshake", systemImage: "person.text.rectangle") {
@@ -104,7 +116,6 @@ struct AdapterView: View {
                 DetailRow(label: "Serial", value: snapshot.adapterSerial)
                 DetailRow(label: "Source", value: snapshot.adapterSource)
                 DetailRow(label: "Power tier", value: snapshot.adapterPowerTier.map(String.init))
-                DetailRow(label: "Negotiated max", value: snapshot.negotiatedProfile?.label)
                 DetailRow(label: "Transport", value: DetailRow.transportName(wireless: snapshot.adapterIsWireless))
             }
         }
@@ -116,7 +127,7 @@ struct AdapterView: View {
         Panel("Advertised profiles", systemImage: "list.bullet.rectangle",
               trailing: snapshot.adapterProfiles.isEmpty ? nil : Text(verbatim: "\(snapshot.adapterProfiles.count)")) {
             if snapshot.adapterProfiles.isEmpty {
-                EmptyNote(text: "This adapter published no PD profile menu. Legacy USB-A chargers and some wireless pads report only a single voltage and current.")
+                EmptyNote(text: "No PD profiles reported.")
             } else {
                 VStack(spacing: 8) {
                     ForEach(snapshot.adapterProfiles) { profile in
@@ -234,13 +245,12 @@ struct AdapterView: View {
                         .font(.caption)
                         .foregroundStyle(Color.mwMuted)
                         .fixedSize(horizontal: false, vertical: true)
-                    provenance
                 }
             } else if snapshot.isWirelessInput || snapshot.adapterIsWireless {
-                EmptyNote(text: "Wireless charging has no cable and no input-current sensor, so there is nothing to measure.",
+                EmptyNote(text: "Cable resistance is unavailable for wireless charging.",
                           systemImage: "wave.3.right")
             } else {
-                EmptyNote(text: "Waiting for the phone to draw enough to measure a drop. Below about 150 mA there is nothing to divide.",
+                EmptyNote(text: "Waiting for enough current to measure voltage drop.",
                           systemImage: "chart.xyaxis.line")
             }
         }
@@ -269,7 +279,7 @@ struct AdapterView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 12))
                 .foregroundStyle(Color.mwDanger)
-            Text("The rail is collapsing under load. The phone is taking well under what the charger offered, and the voltage at the port is far below what was negotiated — the current is being held down to stop it falling further. Try another cable on this charger: if the drop shrinks, it was the cable.")
+            Text("Voltage drop detected. Try another cable.")
                 .font(.caption)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -279,34 +289,6 @@ struct AdapterView: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(Color.mwDanger.opacity(0.12))
         )
-    }
-
-    /// Where the number came from, in its own words. Two different sentences because
-    /// the two methods have to be trusted differently, and a reader deciding whether
-    /// to go and buy a cable deserves to know which one they are looking at.
-    @ViewBuilder
-    private var provenance: some View {
-        let text: Text = {
-            if let estimate = monitor.pathResistance {
-                // Both numbers are formatted before they reach the sentence so each
-                // interpolates as a plain %@. An Int would interpolate as %lld and
-                // leave the literal percent sign next to it, which is not something a
-                // format string should be asked to parse.
-                let spread = String(format: "%.2f A", estimate.currentSpread)
-                let quality = "\(Int(estimate.fitQuality * 100))%"
-                return Text("Fitted over \(spread) of current swing, with \(quality) of it on the line.")
-            }
-            let contract = snapshot.adapterVoltageMillivolts.map { String(format: "%.2f V", Double($0) / 1000) } ?? "—"
-            return Text("From one sample, against the negotiated \(contract). That figure is a ceiling rather than a measurement, so read this as an order of magnitude. Once the current moves — the taper past 80%, thermal throttling, the phone's own load — it is replaced by a fit that needs no reference at all.")
-        }()
-        text
-            .font(.caption2)
-            .foregroundStyle(Color.mwMuted.opacity(0.75))
-            .fixedSize(horizontal: false, vertical: true)
-        Text("Either way this is the whole path — the charger's own regulation, the cable and both plugs — not the cable alone, so it reads best as a comparison between cables on the same charger.")
-            .font(.caption2)
-            .foregroundStyle(Color.mwMuted.opacity(0.75))
-            .fixedSize(horizontal: false, vertical: true)
     }
 
     /// Deliberately coarse bands. The number includes the charger's output impedance
@@ -323,11 +305,11 @@ struct AdapterView: View {
     private func resistanceVerdict(_ milliohms: Double) -> LocalizedStringResource {
         switch milliohms {
         case ..<200:
-            "Low. Nothing in this connection is holding the charge back."
+            "Low resistance"
         case ..<400:
-            "Ordinary for a long or thin cable. It costs a little power as heat, and at these currents it is unlikely to change how fast the phone charges."
+            "Moderate resistance"
         default:
-            "High for a charging path. A thinner or longer cable, a worn plug or a loose fit all look like this. Trying another cable on the same charger is the way to tell which."
+            "High resistance; try another cable"
         }
     }
 }

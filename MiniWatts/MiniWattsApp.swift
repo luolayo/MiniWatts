@@ -3,27 +3,29 @@ import SwiftUI
 
 @main
 struct MiniWattsApp: App {
-    @State private var monitor: PowerMonitor
-    /// One per process, and alive for as long as the app is: the layer Picture in
-    /// Picture draws from cannot come and go with a settings sheet.
-    @State private var floatingMeter = FloatingMeterController()
+    @State private var runtime: MonitoringRuntime
 
     init() {
-        let monitor = PowerMonitor()
-        _monitor = State(initialValue: monitor)
-        // The Shortcuts action runs in this process — launched in the background, with
-        // no scene, when the app is not already running — and has to read through this
-        // monitor's sensors rather than open its own: a process gets one working HID
-        // client, and a second one reads NaN. Registered here because `init` is the
-        // one place that runs on every launch, scene or no scene.
-        AppDependencyManager.shared.add(dependency: monitor)
+        let runtime = MonitoringRuntime()
+        _runtime = State(initialValue: runtime)
+        // Intent actions also cold-launch this process without creating a scene.
+        // Both the shared sensor client and action handlers must exist at launch.
+        AppDependencyManager.shared.add(dependency: runtime.monitor)
+        AppDependencyManager.shared.add(dependency: LiveActivityActionHandlers(
+            refresh: { await runtime.refreshOnce() },
+            stopDownload: { await runtime.stopDownload() },
+            stopMonitoring: { await runtime.stopMonitoring() },
+            startCharging: { await runtime.startChargingFromIntent() },
+            stopCharging: { await runtime.stopChargingFromIntent() }
+        ))
     }
 
     var body: some Scene {
         WindowGroup {
             RootView()
-                .environment(monitor)
-                .environment(floatingMeter)
+                .environment(runtime)
+                .environment(runtime.monitor)
+                .environment(runtime.traffic)
         }
     }
 }

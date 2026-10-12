@@ -1,50 +1,9 @@
 import SwiftUI
 
-/// The page background: a cool vertical wash with a faint measurement grid and a
-/// single soft glow behind the content. Drawn once, cheap, and it is what makes
-/// the screens read as instrument panels instead of settings pages.
+/// A quiet, adaptive surface shared by the app and its detail screens.
 struct Backdrop: View {
-    var glow: Color = .mwAccent
-    var glowIntensity: Double = 1
-
-    private let spacing: CGFloat = 28
-
     var body: some View {
-        ZStack {
-            LinearGradient(colors: [.mwCanvasTop, .mwCanvas],
-                           startPoint: .top,
-                           endPoint: .bottom)
-
-            Canvas { context, size in
-                var path = Path()
-                var x: CGFloat = 0
-                while x <= size.width {
-                    path.move(to: CGPoint(x: x, y: 0))
-                    path.addLine(to: CGPoint(x: x, y: size.height))
-                    x += spacing
-                }
-                var y: CGFloat = 0
-                while y <= size.height {
-                    path.move(to: CGPoint(x: 0, y: y))
-                    path.addLine(to: CGPoint(x: size.width, y: y))
-                    y += spacing
-                }
-                context.stroke(path, with: .color(.mwGrid), lineWidth: 0.5)
-            }
-            // Rasterised once into a texture instead of stroking ~50 lines on
-            // every pass. Kept to the grid alone: the glow below it uses
-            // `plusLighter`, and blend modes inside a drawing group do not always
-            // composite the same way.
-            .drawingGroup()
-
-            RadialGradient(colors: [glow.opacity(0.22 * glowIntensity), .clear],
-                           center: .init(x: 0.5, y: 0.18),
-                           startRadius: 0,
-                           endRadius: 420)
-                .blendMode(.plusLighter)
-                .animation(.easeInOut(duration: 0.8), value: glow)
-        }
-        .ignoresSafeArea()
+        Color.mwCanvas.ignoresSafeArea()
     }
 }
 
@@ -97,10 +56,6 @@ struct Panel<Content: View>: View {
             RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
                 .fill(Color.mwCard)
         )
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
-                .strokeBorder(Color.mwCardStroke, lineWidth: 1)
-        )
     }
 }
 
@@ -133,6 +88,8 @@ struct Metric: View {
                         .foregroundStyle(Color.mwMuted)
                 }
             }
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
             if let footnote {
                 footnote
                     .font(.caption2)

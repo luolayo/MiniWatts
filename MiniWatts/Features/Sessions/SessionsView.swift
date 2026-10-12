@@ -33,17 +33,21 @@ struct SessionsView: View {
     @State private var confirmingDelete = false
 
     var body: some View {
-        PageScaffold("History", glow: .mwBattery, toolbar: AnyView(toolbar)) {
+        PageScaffold("History", toolbar: AnyView(toolbar)) {
             if let session = monitor.currentSession {
                 currentPanel(session)
             }
             if monitor.sessions.isEmpty {
                 Panel("No finished charges yet", systemImage: "clock.arrow.circlepath") {
-                    EmptyNote(text: "A session starts when you plug in and is saved when you unplug. Energy is integrated from the live sensors, so keep MiniWatts in the foreground for the totals to cover the whole charge.",
+                    EmptyNote(text: "Charge history appears here after unplugging.",
                               systemImage: "bolt.badge.clock")
                 }
             } else {
-                summaryPanel
+                DisclosureGroup("All sessions") {
+                    summaryPanel.padding(.top, 12)
+                }
+                .font(.subheadline)
+                .padding(.horizontal, 4)
                 ForEach(monitor.sessions) { session in
                     NavigationLink {
                         SessionDetailView(session: session)
@@ -129,27 +133,24 @@ struct SessionRow: View {
                             .font(.system(size: 14, weight: .semibold))
                             .lineLimit(1)
                         Text("\(Formatting.timestamp(session.start)) · \(Formatting.duration(session.duration))")
-                            .mwMono(size: 10)
+                            .font(.caption)
                             .foregroundStyle(Color.mwMuted)
                     }
                     Spacer(minLength: 8)
                     VStack(alignment: .trailing, spacing: 2) {
+                        Text("\(session.startPercent)% → \(session.endPercent)%")
+                            .mwReadout(size: 16)
+                            .foregroundStyle(Color.mwAccent)
                         Text(verbatim: String(format: "%.2f Wh", session.totals.measuredInputWattHours
                                               ?? session.totals.batteryWattHours))
-                            .mwReadout(size: 16)
-                            .foregroundStyle(session.totals.measuredInputWattHours == nil
-                                             ? Color.mwBattery : Color.mwAccent)
-                        Text("\(session.startPercent)% → \(session.endPercent)%")
-                            .mwMono(size: 10)
+                            .font(.caption)
+                            .monospacedDigit()
                             .foregroundStyle(Color.mwMuted)
                     }
                 }
                 HStack(spacing: 10) {
                     Sparkline(values: session.sparkline.values, tint: session.sparkline.tint)
                         .frame(height: 26)
-                    if let efficiency = session.totals.chargePathEfficiencyPercent {
-                        Pill(text: Text(verbatim: String(format: "%.0f%%", efficiency)), systemImage: "arrow.triangle.swap", tint: .mwLoss)
-                    }
                     if session.throttledFraction > 0.05 {
                         Pill(text: Text("\(String(format: "%.0f%%", session.throttledFraction * 100)) hot"),
                              systemImage: "thermometer.high", tint: .mwDanger)
@@ -170,7 +171,7 @@ struct SessionDetailView: View {
 
     var body: some View {
         ZStack {
-            Backdrop(glow: .mwBattery)
+            Backdrop()
             ScrollView {
                 VStack(spacing: 14) {
                     energyPanel
@@ -231,7 +232,7 @@ struct SessionDetailView: View {
                            unit: "%", tint: .mwBattery, size: 21)
                 }
                 if session.totals.integratedSeconds < session.duration * 0.9 {
-                    Text("Measured for \(Formatting.duration(session.totals.integratedSeconds)) of \(Formatting.duration(session.duration)) — the app was backgrounded for the rest, and those gaps are excluded rather than estimated.")
+                    Text("Measured \(Formatting.duration(session.totals.integratedSeconds)) of \(Formatting.duration(session.duration)).")
                         .font(.caption2)
                         .foregroundStyle(Color.mwMuted)
                         .fixedSize(horizontal: false, vertical: true)

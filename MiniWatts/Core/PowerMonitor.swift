@@ -50,14 +50,13 @@ final class PowerMonitor {
         didSet { UserDefaults.standard.set(keepScreenAwakeWhileCharging, forKey: Self.keepAwakeKey) }
     }
 
-    /// Whether to show the charging live activity on the Lock Screen, in the Dynamic
-    /// Island and in StandBy. Applied by `RootView`, like the setting above.
-    var showsLiveActivityWhileCharging: Bool {
-        didSet { UserDefaults.standard.set(showsLiveActivityWhileCharging, forKey: Self.liveActivityKey) }
+    /// Whether to show power and network readings on the Lock Screen and Dynamic Island.
+    var showsLiveActivity: Bool {
+        didSet { UserDefaults.standard.set(showsLiveActivity, forKey: Self.liveActivityKey) }
     }
 
     /// The reading used by the compact Dynamic Island presentation. This changes
-    /// presentation only; the activity remains charger-bound.
+    /// presentation only; sampling is independent of the selected metric.
     var liveActivityMetric: LiveActivityMetric {
         didSet {
             UserDefaults.standard.set(liveActivityMetric.rawValue,
@@ -66,13 +65,9 @@ final class PowerMonitor {
     }
 
     let thermal = ThermalMonitor()
+    let network = NetworkMonitor()
 
-    /// Called at the end of every tick. `RootView` installs it and fans the reading
-    /// out to the live activity, the widget and the floating meter.
-    ///
-    /// A closure rather than SwiftUI's `onChange`, which is what this used to be:
-    /// view updates stop when the app leaves the screen, and off screen is exactly
-    /// when the floating meter is the only thing still showing a number.
+    /// Called at the end of each tick to publish the activity and widget readings.
     var onTick: ((PowerSnapshot) -> Void)?
 
     /// Usable pack energy, used to turn %/h into watts. Read from IOKit where the
@@ -149,7 +144,7 @@ final class PowerMonitor {
         // Defaults to on: recording a whole charge is the point of the History tab,
         // and it cannot happen if the screen locks after thirty seconds.
         keepScreenAwakeWhileCharging = defaults.object(forKey: Self.keepAwakeKey) as? Bool ?? true
-        showsLiveActivityWhileCharging = defaults.object(forKey: Self.liveActivityKey) as? Bool ?? true
+        showsLiveActivity = defaults.object(forKey: Self.liveActivityKey) as? Bool ?? true
         liveActivityMetric = defaults.string(forKey: Self.liveActivityMetricKey)
             .flatMap(LiveActivityMetric.init(rawValue:)) ?? .chargingPower
         sensorServiceCount = probeService.initialServiceCount
@@ -189,6 +184,7 @@ final class PowerMonitor {
 
     func start() {
         guard task == nil else { return }
+        network.start()
         task = Task { [weak self] in
             while let self, !Task.isCancelled {
                 await self.refresh()
@@ -209,6 +205,7 @@ final class PowerMonitor {
     func pause() {
         task?.cancel()
         task = nil
+        network.pause()
         persist()
     }
 
@@ -230,6 +227,7 @@ final class PowerMonitor {
         // views that read the property, and no other view does.
         powerSources = result.sources
         snapshot = current
+        network.sample()
         if sensorServiceCount != result.serviceCount {
             sensorServiceCount = result.serviceCount
             collectDiagnostics()

@@ -8,8 +8,8 @@ import Foundation
 /// just measure — see `ReadingMetric.value(in:)`.
 ///
 /// It runs in MiniWatts' own process. When the app is not running, iOS launches it in
-/// the background to perform the intent: no scene, no `RootView`, and no tick, because
-/// the tick only runs in the foreground. Two consequences:
+/// the background to perform the intent: no scene and no active continuous monitoring
+/// job on a cold launch. Two consequences:
 ///
 /// - `PowerMonitor.snapshot` is useless here — it is as old as the last tick, which may
 ///   be hours. The intent reads fresh through `readNow()`, which also skips everything

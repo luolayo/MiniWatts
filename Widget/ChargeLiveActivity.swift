@@ -40,30 +40,40 @@ struct ChargeLiveActivity: Widget {
                     PrimaryMetricView(state: state,
                                       palette: palette,
                                       size: 28,
-                                      isStale: context.isStale,
-                                      inlineCaption: false)
+                                      isStale: (context.isStale || context.state.isPaused == true))
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(spacing: 6) {
-                        SecondaryMetrics(state: state, palette: palette)
-                        LevelBar(percent: reading.percent,
-                                 tint: palette.tint(for: reading),
-                                 track: palette.track,
-                                 height: 5)
-                        // The status is already in the top corner.
-                        ActivityFootnote(context: context, palette: palette, showsStatus: false)
+                    VStack(spacing: 5) {
+                        if let traffic = state.traffic {
+                            Text(verbatim: traffic.summary)
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .foregroundStyle(palette.network)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                        } else if let temperature = reading.batteryTemperature {
+                            Text(verbatim: String(format: "%.1f °C", temperature))
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .foregroundStyle(palette.muted)
+                        }
+                        ActivityFootnote(context: context, palette: palette)
                     }
                     .padding(.horizontal, Self.islandInset)
                 }
             } compactLeading: {
                 Image(systemName: symbol(for: state.selectedMetric))
-                    .foregroundStyle(context.isStale ? palette.muted : tint)
+                    .foregroundStyle((context.isStale || context.state.isPaused == true) ? palette.muted : tint)
             } compactTrailing: {
                 CompactMetricValue(state: state)
-                    .foregroundStyle(context.isStale ? palette.muted : tint)
+                    .foregroundStyle((context.isStale || context.state.isPaused == true) ? palette.muted : tint)
             } minimal: {
-                Image(systemName: symbol(for: state.selectedMetric))
-                    .foregroundStyle(context.isStale ? palette.muted : tint)
+                Text(verbatim: minimalValue(for: state))
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .accessibilityLabel(label(for: state.selectedMetric))
+                    .accessibilityValue(Text(verbatim: formattedValue(for: state.selectedMetric, state: state)))
+                    .foregroundStyle((context.isStale || context.state.isPaused == true) ? palette.muted : tint)
             }
             .keylineTint(tint)
         }
@@ -78,55 +88,51 @@ struct ChargeActivityLockScreenView: View {
         let palette = WidgetPalette(scheme)
         let state = context.state
         let reading = state.reading
-        // The Lock Screen gives an activity about 160 pt of height. Everything here has
-        // to fit inside it, padding included, or the system clips the top and bottom.
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 PrimaryMetricView(state: state,
                                   palette: palette,
                                   size: 34,
-                                  isStale: context.isStale)
+                                  isStale: (context.isStale || context.state.isPaused == true))
                 Spacer(minLength: 8)
                 Text(verbatim: reading.percentText)
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .monospacedDigit()
             }
-            SecondaryMetrics(state: state, palette: palette)
-                .opacity(context.isStale ? 0.55 : 1)
-            LevelBar(percent: reading.percent,
-                     tint: palette.tint(for: reading),
-                     track: palette.track,
-                     height: 6)
+            if let traffic = state.traffic {
+                Text(verbatim: traffic.summary)
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(palette.network)
+                    .lineLimit(1)
+            } else if let temperature = reading.batteryTemperature {
+                Text(verbatim: String(format: "%.1f °C", temperature))
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(palette.muted)
+            }
             ActivityFootnote(context: context, palette: palette)
         }
-        .padding(16)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .activitySystemActionForegroundColor(palette.tint(for: state))
     }
 }
 
-/// The selected reading: symbol, number and a caption saying what it is. On the Lock
-/// Screen the caption follows the number on the same line; the island's centre is
-/// too narrow for that, so there it goes underneath.
+/// The selected reading with a short source or sensor caption.
 private struct PrimaryMetricView: View {
     let state: ChargeActivityContentState
     let palette: WidgetPalette
     let size: CGFloat
     let isStale: Bool
-    var inlineCaption = true
 
     var body: some View {
-        let layout = inlineCaption
-            ? AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 6))
-            : AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
-        layout {
+        VStack(alignment: .leading, spacing: 2) {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Image(systemName: symbol(for: state.selectedMetric))
                     .font(.system(size: size * 0.5, weight: .bold))
-                Text(verbatim: numericValue(for: state.selectedMetric, state: state)
-                    .map(oneDecimal) ?? "—")
+                Text(verbatim: primaryValue)
                     .font(.system(size: size, weight: .semibold, design: .rounded))
                     .monospacedDigit()
-                Text(verbatim: unit(for: state.selectedMetric))
+                Text(verbatim: primaryUnit)
                     .font(.system(size: max(11, size * 0.42),
                                   weight: .medium,
                                   design: .rounded))
@@ -142,9 +148,23 @@ private struct PrimaryMetricView: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(label(for: state.selectedMetric))
-        .accessibilityValue(Text(verbatim: formattedValue(for: state.selectedMetric,
-                                                          state: state)))
+        .accessibilityValue(isStale ? Text("Paused")
+                            : Text(verbatim: formattedValue(for: state.selectedMetric, state: state)))
         .accessibilityAddTraits(.updatesFrequently)
+    }
+
+    private var primaryValue: String {
+        if state.selectedMetric.isNetwork {
+            return NetworkRateText(numericValue(for: state.selectedMetric, state: state)).value
+        }
+        return numericValue(for: state.selectedMetric, state: state).map(oneDecimal) ?? "—"
+    }
+
+    private var primaryUnit: String {
+        if state.selectedMetric.isNetwork {
+            return NetworkRateText(numericValue(for: state.selectedMetric, state: state)).unit
+        }
+        return unit(for: state.selectedMetric)
     }
 
     @ViewBuilder
@@ -161,39 +181,8 @@ private struct PrimaryMetricView: View {
             } else {
                 Text(label(for: .hottestTemperature))
             }
-        case .socTemperature, .batteryTemperature:
+        case .socTemperature, .batteryTemperature, .downloadRate, .uploadRate:
             Text(label(for: state.selectedMetric))
-        }
-    }
-}
-
-/// The three readings that are not the primary one, one line each. A cell of icon,
-/// label and value stacked three high did not fit the Lock Screen's height, and
-/// repeated the primary reading besides.
-private struct SecondaryMetrics: View {
-    let state: ChargeActivityContentState
-    let palette: WidgetPalette
-
-    var body: some View {
-        HStack(spacing: 10) {
-            ForEach(LiveActivityMetric.allCases.filter { $0 != state.selectedMetric }) { metric in
-                HStack(spacing: 4) {
-                    Image(systemName: symbol(for: metric))
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(metricTint(metric, state: state, palette: palette))
-                    Text(shortLabel(for: metric))
-                        .foregroundStyle(palette.muted)
-                    Text(verbatim: shortValue(for: metric, state: state))
-                        .monospacedDigit()
-                }
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(label(for: metric))
-                .accessibilityValue(Text(verbatim: formattedValue(for: metric, state: state)))
-            }
         }
     }
 }
@@ -203,41 +192,53 @@ private struct CompactMetricValue: View {
 
     var body: some View {
         Text(verbatim: shortValue(for: state.selectedMetric, state: state))
-            .font(.system(size: 14, weight: .semibold, design: .rounded))
+            .font(.system(size: state.selectedMetric.isNetwork ? 12 : 14, weight: .semibold))
             .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
     }
 }
 
-/// Status and when the charge began — or, once the app has stopped updating, a plain
-/// statement that the numbers above are paused. The temperatures are in the row above.
+/// A timestamp and two small actions, with a paused marker when data stops.
 struct ActivityFootnote: View {
     let context: ActivityViewContext<ChargeActivityAttributes>
     let palette: WidgetPalette
-    var showsStatus = true
 
     var body: some View {
         HStack(spacing: 6) {
-            if context.isStale {
-                Label("Paused — open MiniWatts to resume", systemImage: "pause.circle")
+            if (context.isStale || context.state.isPaused == true) {
+                Label("Paused", systemImage: "pause.circle")
                     .foregroundStyle(palette.loss)
-            } else if showsStatus {
-                Text(context.state.reading.statusTitle)
             }
             Spacer(minLength: 6)
-            // Dropped while paused: the line is too narrow for both, and the pause
-            // message was the one being cut short.
-            if !context.isStale {
-                Text("Since \(Text(context.attributes.startedAt, style: .time))")
-            }
-            // The one way to close the activity while MiniWatts is suspended or killed:
-            // iOS wakes the app to perform the intent.
-            Button(intent: EndChargeActivityIntent()) {
-                Label("End", systemImage: "xmark")
+            Text(verbatim: context.state.date.formatted(date: .omitted, time: .standard))
+            Button(intent: RefreshChargeActivityIntent()) {
+                Image(systemName: "arrow.clockwise")
                     .padding(.horizontal, 7)
-                    .padding(.vertical, 2)
+                    .padding(.vertical, 3)
                     .background(Capsule().fill(palette.track))
             }
+            .accessibilityLabel("Refresh readings")
             .buttonStyle(.plain)
+            if context.state.traffic != nil {
+                Button(intent: StopTrafficActivityIntent()) {
+                    Image(systemName: "stop.fill")
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(palette.track))
+                }
+                .accessibilityLabel("Stop download")
+                .buttonStyle(.plain)
+            } else {
+                Button(intent: EndChargeActivityIntent()) {
+                    Image(systemName: "xmark")
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(palette.track))
+                }
+                .accessibilityLabel("End Live Activity")
+                .buttonStyle(.plain)
+            }
         }
         .font(.system(size: 12, weight: .medium))
         .foregroundStyle(palette.muted)
@@ -255,6 +256,8 @@ private func numericValue(
     case .socTemperature: state.socTemperature
     case .batteryTemperature: state.batteryTemperature
     case .hottestTemperature: state.hottestTemperature
+    case .downloadRate: state.network?.downloadBytesPerSecond
+    case .uploadRate: state.network?.uploadBytesPerSecond
     }
 }
 
@@ -264,15 +267,8 @@ private func label(for metric: LiveActivityMetric) -> LocalizedStringKey {
     case .socTemperature: "SoC temperature"
     case .batteryTemperature: "Battery temperature"
     case .hottestTemperature: "Hottest component"
-    }
-}
-
-private func shortLabel(for metric: LiveActivityMetric) -> LocalizedStringKey {
-    switch metric {
-    case .chargingPower: "Power"
-    case .socTemperature: "SoC"
-    case .batteryTemperature: "Battery"
-    case .hottestTemperature: "Hottest"
+    case .downloadRate: "Download speed"
+    case .uploadRate: "Upload speed"
     }
 }
 
@@ -282,19 +278,8 @@ private func symbol(for metric: LiveActivityMetric) -> String {
     case .socTemperature: "cpu"
     case .batteryTemperature: "battery.75percent"
     case .hottestTemperature: "thermometer.high"
-    }
-}
-
-private func metricTint(
-    _ metric: LiveActivityMetric,
-    state: ChargeActivityContentState,
-    palette: WidgetPalette
-) -> Color {
-    switch metric {
-    case .chargingPower: palette.tint(for: state.reading)
-    case .socTemperature: palette.temperatureTint(state.socTemperature)
-    case .batteryTemperature: palette.temperatureTint(state.batteryTemperature)
-    case .hottestTemperature: palette.temperatureTint(state.hottestTemperature)
+    case .downloadRate: "arrow.down"
+    case .uploadRate: "arrow.up"
     }
 }
 
@@ -311,6 +296,7 @@ private func shortValue(
     state: ChargeActivityContentState
 ) -> String {
     guard let value = numericValue(for: metric, state: state) else { return "—" }
+    if metric.isNetwork { return NetworkRateText(value).combined }
     return oneDecimal(value) + unit(for: metric)
 }
 
@@ -322,6 +308,15 @@ private func formattedValue(
         return String(localized: "No reading")
     }
     return shortValue(for: metric, state: state)
+}
+
+private func minimalValue(for state: ChargeActivityContentState) -> String {
+    let metric = state.selectedMetric
+    guard metric.isNetwork else { return shortValue(for: metric, state: state) }
+    let formatted = NetworkRateText(numericValue(for: metric, state: state))
+    guard !formatted.unit.isEmpty else { return "—" }
+    let arrow = metric == .downloadRate ? "↓" : "↑"
+    return arrow + formatted.value + formatted.unit.prefix(1)
 }
 
 #Preview("Lock Screen", as: .content,
@@ -340,6 +335,10 @@ private func formattedValue(
         socTemperature: 39.2,
         hottestTemperature: 41.3,
         hottestSensorName: "PMU tdie1",
-        selectedMetric: .chargingPower
+        selectedMetric: .chargingPower,
+        network: NetworkReading(connection: .wifi,
+                                downloadBytesPerSecond: 3_240_000,
+                                uploadBytesPerSecond: 128_000),
+        isPaused: false
     )
 }

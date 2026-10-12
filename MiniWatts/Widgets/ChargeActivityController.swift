@@ -1,64 +1,124 @@
 import ActivityKit
 import Foundation
 
-/// Starts, feeds and ends the charging live activity.
-///
-/// Driven only by the app's own tick, so it only moves while the app runs. ActivityKit
-/// will not start an activity from the background and there is no push channel (see
-/// `ChargeActivityAttributes`). That shapes everything here:
-/// - an activity is only ever started while the app is in front
-/// - every update carries a stale date a little past the next expected update, so once
-///   the app is suspended the Lock Screen marks the reading paused instead of passing
-///   off an old number as live
-/// - it ends when the charger comes out — which, if that happens while the app is
-///   suspended, the app only learns on its next tick. The stale date covers the gap,
-///   and the End button (`EndChargeActivityIntent`) lets the user close it meanwhile.
+/// Owns the single custom charging activity. A continued background task has its
+/// own system activity, so the custom one is ended while that task is visible.
 final class ChargeActivityController {
     private var activity: Activity<ChargeActivityAttributes>?
     private var adopted = false
     private var lastSent: ChargeActivityContentState?
     private var lastSentAt: Date = .distantPast
     private var lastStartAttempt: Date = .distantPast
+    private var pendingUpdate: Task<Void, Never>?
+    private var dismissed = false
+    private var wasEnabled = false
 
     /// How long past an update its reading still counts as current. Updates go out
     /// every few seconds; this tolerates a couple of missed ones and no more.
-    private static let staleAfter: TimeInterval = 45
+    private static let staleAfter: TimeInterval = 12
     /// Minimum spacing between updates.
-    private static let minimumInterval: TimeInterval = 5
-    /// An update goes out at least this often, if only to push the stale date forward.
-    private static let maximumInterval: TimeInterval = 20
+    private static let minimumInterval: TimeInterval = 1
+    /// The monitor samples once a second; send every sample while it is running.
+    private static let maximumInterval: TimeInterval = 1
     /// After a refused start — too many activities, the user switched them off —
     /// wait this long before trying again rather than asking every second.
     private static let retryInterval: TimeInterval = 30
 
+    func prepareForExplicitStart() {
+        dismissed = false
+        wasEnabled = false
+        lastStartAttempt = .distantPast
+        if let activity, activity.activityState == .ended || activity.activityState == .dismissed {
+            self.activity = nil
+            lastSent = nil
+        }
+    }
+
     func sync(_ snapshot: PowerSnapshot,
+              network: NetworkReading,
               selectedMetric: LiveActivityMetric,
               enabled: Bool,
-              isForeground: Bool) {
+              isForeground: Bool,
+              systemActivityVisible: Bool = false,
+              allowBackgroundStart: Bool = false,
+              traffic: TrafficActivityReading? = nil) {
         adoptExistingActivities()
-        let state = Self.contentState(from: snapshot, selectedMetric: selectedMetric)
-        guard enabled else {
+        let state = Self.contentState(from: snapshot, network: network,
+                                      selectedMetric: selectedMetric, traffic: traffic)
+        if enabled && !wasEnabled {
+            dismissed = false
+            lastStartAttempt = .distantPast
+        }
+        wasEnabled = enabled
+        guard enabled && snapshot.externalConnected && !systemActivityVisible else {
             end(with: state, dismissal: .immediate)
+            if !snapshot.externalConnected { dismissed = false }
             return
         }
-        guard state.reading.externalConnected else {
-            // Leave the final state up briefly: "unplugged at 86 %" is worth a glance.
-            end(with: state, dismissal: .after(state.date.addingTimeInterval(120)))
-            return
+        if let activity, activity.activityState == .dismissed || activity.activityState == .ended {
+            // Respect End and system dismissal. An explicit off/on restarts it.
+            self.activity = nil
+            dismissed = true
         }
+        guard !dismissed else { return }
         if let activity, activity.activityState == .active || activity.activityState == .stale {
             update(activity, with: state)
-        } else if isForeground {
+        } else if isForeground || allowBackgroundStart {
             start(with: state)
         }
     }
+
+    func endCurrent() {
+        adoptExistingActivities()
+        dismissed = true
+        wasEnabled = true
+        guard let activity else { return }
+        self.activity = nil
+        lastSent = nil
+        lastSentAt = .distantPast
+        let id = activity.id
+        let previous = pendingUpdate
+        pendingUpdate = Task {
+            await previous?.value
+            await Self.end(id, nil, dismissal: .immediate)
+        }
+    }
+
+    func pause() {
+        guard let activity, var state = lastSent, state.isPaused != true else { return }
+        state.isPaused = true
+        state.isSnapshot = false
+        state.traffic = nil
+        lastSent = state
+        enqueueUpdate(activity.id, content(for: state))
+    }
+
+    func refresh(_ snapshot: PowerSnapshot, network: NetworkReading,
+                 selectedMetric: LiveActivityMetric, enabled: Bool,
+                 isSnapshot: Bool, traffic: TrafficActivityReading?) async {
+        guard enabled else { return }
+        adoptExistingActivities()
+        guard snapshot.externalConnected,
+              let activity, activity.activityState == .active || activity.activityState == .stale else { return }
+        var state = Self.contentState(from: snapshot, network: network,
+                                      selectedMetric: selectedMetric, traffic: traffic)
+        state.isSnapshot = isSnapshot
+        lastSent = state
+        lastSentAt = state.date
+        enqueueUpdate(activity.id, content(for: state))
+        await waitForUpdates()
+    }
+
+    func waitForUpdates() async { await pendingUpdate?.value }
 
     /// An activity outlives the app being killed. The first sync after launch picks up
     /// one left behind and ends any others, rather than starting a duplicate.
     private func adoptExistingActivities() {
         guard !adopted else { return }
         adopted = true
-        let existing = Activity<ChargeActivityAttributes>.activities
+        let existing = Activity<ChargeActivityAttributes>.activities.filter {
+            $0.activityState == .active || $0.activityState == .stale
+        }
         activity = existing.first
         for id in existing.dropFirst().map(\.id) {
             Task { await Self.end(id, nil, dismissal: .immediate) }
@@ -86,13 +146,16 @@ final class ChargeActivityController {
     private func update(_ activity: Activity<ChargeActivityAttributes>,
                         with state: ChargeActivityContentState) {
         let elapsed = state.date.timeIntervalSince(lastSentAt)
-        guard elapsed >= Self.minimumInterval else { return }
+        let forced = lastSent?.isPaused == true || lastSent?.isSnapshot == true
+            || lastSent?.selectedMetric != state.selectedMetric
+            || (lastSent?.traffic != nil) != (state.traffic != nil)
+        guard forced || elapsed >= Self.minimumInterval else { return }
         if elapsed < Self.maximumInterval, let lastSent, !Self.differs(lastSent, state) { return }
         lastSent = state
         lastSentAt = state.date
         let content = content(for: state)
         let id = activity.id
-        Task { await Self.update(id, content) }
+        enqueueUpdate(id, content)
     }
 
     private func end(with state: ChargeActivityContentState,
@@ -101,9 +164,24 @@ final class ChargeActivityController {
         self.activity = nil
         lastSent = nil
         lastSentAt = .distantPast
+        lastStartAttempt = .distantPast
         let final = ActivityContent(state: state, staleDate: nil)
         let id = activity.id
-        Task { await Self.end(id, final, dismissal: dismissal) }
+        let previous = pendingUpdate
+        pendingUpdate = Task {
+            await previous?.value
+            await Self.end(id, final, dismissal: dismissal)
+        }
+    }
+
+    /// Keep a delayed foreground update from overwriting the paused state.
+    private func enqueueUpdate(_ id: String,
+                               _ content: ActivityContent<ChargeActivityContentState>) {
+        let previous = pendingUpdate
+        pendingUpdate = Task {
+            await previous?.value
+            await Self.update(id, content)
+        }
     }
 
     // `Activity` is not `Sendable`, and its `update` and `end` are nonisolated async.
@@ -133,7 +211,9 @@ final class ChargeActivityController {
         for state: ChargeActivityContentState
     ) -> ActivityContent<ChargeActivityContentState> {
         ActivityContent(state: state,
-                        staleDate: state.date.addingTimeInterval(Self.staleAfter))
+                        staleDate: state.isPaused == true ? .now
+                            : state.date.addingTimeInterval(Self.staleAfter),
+                        relevanceScore: 100)
     }
 
     /// Whether a reading has moved enough to be worth an update on its own.
@@ -144,6 +224,10 @@ final class ChargeActivityController {
         let oldReading = old.reading
         let newReading = new.reading
         return old.selectedMetric != new.selectedMetric
+            || old.isPaused != new.isPaused
+            || old.isSnapshot != new.isSnapshot
+            || old.traffic != new.traffic
+            || old.network != new.network
             || oldReading.percent != newReading.percent
             || oldReading.source != newReading.source
             || oldReading.isCharging != newReading.isCharging
@@ -159,14 +243,20 @@ final class ChargeActivityController {
 
     private static func contentState(
         from snapshot: PowerSnapshot,
-        selectedMetric: LiveActivityMetric
+        network: NetworkReading,
+        selectedMetric: LiveActivityMetric,
+        traffic: TrafficActivityReading? = nil
     ) -> ChargeActivityContentState {
         ChargeActivityContentState(
             reading: ChargeReading(snapshot),
             socTemperature: snapshot.socTemperature,
             hottestTemperature: snapshot.hottestSensor?.value,
             hottestSensorName: snapshot.hottestSensor?.name,
-            selectedMetric: selectedMetric
+            selectedMetric: selectedMetric,
+            network: network,
+            isPaused: false,
+            isSnapshot: false,
+            traffic: traffic
         )
     }
 }

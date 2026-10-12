@@ -21,7 +21,7 @@ struct DebugView: View {
 
     var body: some View {
         ZStack {
-            Backdrop(glow: .mwMuted, glowIntensity: 0.5)
+            Backdrop()
             ScrollView {
                 VStack(spacing: 14) {
                     diagnosticsPanel
@@ -103,7 +103,7 @@ struct DebugView: View {
                             .font(.system(size: 13, weight: .medium))
                     }
                     .tint(.mwAccent)
-                    EmptyNote(text: "Lists every service the HID event system exposes, matched or not, with its usage page and usage. This is how the power and temperature sensors were found in the first place.")
+                    EmptyNote(text: "All HID services and usage IDs.")
                 } else {
                     ForEach(inventory.filter { matches($0.name, String(format: "0x%04x", $0.usagePage)) }) { service in
                         HStack {
@@ -141,7 +141,7 @@ struct DebugView: View {
                             .font(.system(size: 13, weight: .medium))
                     }
                     .tint(.mwAccent)
-                    EmptyNote(text: "Reads the IOAccessoryManager registry family — the charger's connect type, current limit, manufacturer, model and serial — plus the USB-PD nodes macOS publishes for the cable. Registry reads only: nothing is opened and nothing is written.")
+                    EmptyNote(text: "Accessory and USB-PD registry values.")
                 }
             }
         }
