@@ -82,6 +82,7 @@ struct ChargingProtocolChecks {
             ["Index": 0.5, "MaxVoltage": 5000, "MaxCurrent": 3000],
             profile(255, 5000, 3000), profile(-1, 5000, 3000),
             profile(0, 0, 3000), profile(0, -5000, 3000), profile(0, 5000, 0),
+            profile(0, 65535, 65535), profile(0, 65535, 3000), profile(0, 5000, 65535),
             ["Index": 0, "MaxVoltage": true, "MaxCurrent": 3000],
             ["Index": 0, "MaxVoltage": 5000.5, "MaxCurrent": 3000],
             ["Index": 0, "MaxVoltage": UInt64.max, "MaxCurrent": 3000]
@@ -96,6 +97,11 @@ struct ChargingProtocolChecks {
                                                  profile(1, 12000, 1500)]])
         try expect(ambiguous.adapterProfiles.map(\.index) == [1], "Discard ambiguous duplicate IDs, keep independent valid entries")
         try expect(ambiguous.chargingProtocol == .unidentifiedWired, "An ambiguous active index cannot identify PD")
+
+        let placeholderMenu = snapshot(["UsbHvcHvcIndex": 1,
+                                        "UsbHvcMenu": [profile(0, 65535, 65535), profile(1, 9000, 2220)]])
+        try expect(placeholderMenu.adapterProfiles.map(\.index) == [1], "A placeholder must not hide valid profiles")
+        try expect(placeholderMenu.chargingProtocol == .usbPDInferred, "A valid selected profile remains evidence of PD")
 
         let registryPD = PowerSnapshot(registry: ["ExternalConnected": true, "AdapterDetails": pdAdapter])
         try expect(registryPD.chargingProtocol == .usbPDInferred, "Registry and powerd adapter sources follow the same rules")

@@ -231,9 +231,14 @@ struct DashboardView: View {
               trailing: snapshot.adapterUtilisation.map { Text("\(Int($0 * 100))% of adapter") }) {
             VStack(spacing: 12) {
                 HStack(alignment: .top, spacing: 10) {
-                    Metric(caption: "From charger",
+                    Metric(caption: snapshot.isWirelessInput ? "At charging coil" : "At phone port",
                            value: snapshot.inputWatts.map(Formatting.watts) ?? "—",
-                           unit: "W", tint: .mwAccent, size: 22)
+                           unit: "W",
+                           tint: .mwAccent,
+                           footnote: snapshot.isWirelessInput
+                               ? Text(verbatim: "coil voltage × current")
+                               : Text(verbatim: "Charger VQ0u × IQ0u"),
+                           size: 22)
                     Metric(caption: "Into cell",
                            value: snapshot.batteryWatts.map { Formatting.watts(max($0, 0)) } ?? "—",
                            unit: "W", tint: .mwBattery, size: 22)
@@ -258,6 +263,10 @@ struct DashboardView: View {
                     detailLinkLabel("Charger details")
                 }
                 .buttonStyle(.plain)
+
+                if let partial = snapshot.partialInputWatts, let battery = snapshot.batteryWatts {
+                    PartialInputNote(sensedWatts: partial, cellWatts: battery)
+                }
                 if wirelessInputUnmeasurable {
                     EmptyNote(text: "Wireless input power is unavailable; cell power is shown.",
                               systemImage: "wave.3.right")

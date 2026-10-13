@@ -49,6 +49,13 @@ struct AdapterView: View {
                         .foregroundStyle(Color.mwMuted)
                 }
 
+                if snapshot.inputWatts != nil, !snapshot.isWirelessInput {
+                    Text("Measured at the phone's USB-C rail (VQ0u × IQ0u). The adapter value is a negotiated ceiling, not a wall-meter reading.")
+                        .font(.caption)
+                        .foregroundStyle(Color.mwMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
                 if let utilisation = snapshot.adapterUtilisation {
                     BarRow(title: Text("Adapter utilisation"),
                            detail: "\(Int(utilisation * 100))%",
@@ -56,7 +63,9 @@ struct AdapterView: View {
                            tint: utilisation > 0.75 ? .mwBattery : .mwLoss)
                 }
 
-                if snapshot.inputWatts == nil, snapshot.adapterIsWireless {
+                if let partial = snapshot.partialInputWatts, let battery = snapshot.batteryWatts {
+                    PartialInputNote(sensedWatts: partial, cellWatts: battery)
+                } else if snapshot.inputWatts == nil, snapshot.adapterIsWireless {
                     EmptyNote(text: "Wireless input power is unavailable.",
                               systemImage: "wave.3.right")
                 }

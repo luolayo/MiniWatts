@@ -221,6 +221,7 @@ final class ChargeActivityController {
         _ old: ChargeActivityContentState,
         _ new: ChargeActivityContentState
     ) -> Bool {
+        // Match the activity's one-decimal display when comparing readings.
         let oldReading = old.reading
         let newReading = new.reading
         return old.selectedMetric != new.selectedMetric
@@ -233,11 +234,11 @@ final class ChargeActivityController {
             || oldReading.isCharging != newReading.isCharging
             || oldReading.isOnHold != newReading.isOnHold
             || oldReading.isFull != newReading.isFull
-            || abs((oldReading.watts ?? -1) - (newReading.watts ?? -1)) >= 0.2
+            || abs((oldReading.watts ?? -1) - (newReading.watts ?? -1)) >= 0.05
             || abs((oldReading.batteryTemperature ?? 0)
-                   - (newReading.batteryTemperature ?? 0)) >= 0.5
-            || abs((old.socTemperature ?? 0) - (new.socTemperature ?? 0)) >= 0.5
-            || abs((old.hottestTemperature ?? 0) - (new.hottestTemperature ?? 0)) >= 0.5
+                   - (newReading.batteryTemperature ?? 0)) >= 0.05
+            || abs((old.socTemperature ?? 0) - (new.socTemperature ?? 0)) >= 0.05
+            || abs((old.hottestTemperature ?? 0) - (new.hottestTemperature ?? 0)) >= 0.05
             || old.hottestSensorName != new.hottestSensorName
     }
 

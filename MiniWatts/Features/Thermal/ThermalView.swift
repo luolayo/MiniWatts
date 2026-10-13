@@ -23,9 +23,18 @@ struct ThermalView: View {
             }
             if snapshot.temperatures.isEmpty {
                 Panel("Sensors", systemImage: "sensor") {
-                    EmptyNote(text: "No temperature sensors found.")
+                    EmptyNote(text: snapshot.temperatureWarnings.isEmpty
+                              ? "No temperature sensors were found. The simulator has none; on a device they appear as soon as the app has read the HID service list."
+                              : "Temperature sensors answered, but every value was excluded from derived readings. See the filter details below.",
+                              systemImage: "exclamationmark.triangle")
+                }
+                if !snapshot.temperatureWarnings.isEmpty {
+                    temperatureWarningsPanel
                 }
             } else {
+                if !snapshot.temperatureWarnings.isEmpty {
+                    temperatureWarningsPanel
+                }
                 ForEach(snapshot.temperaturesByZone) { group in
                     zonePanel(group)
                 }
@@ -37,22 +46,56 @@ struct ThermalView: View {
         Panel("Component temperatures", systemImage: "thermometer.medium") {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())],
                       alignment: .leading, spacing: 18) {
-                temperature("Battery", value: snapshot.batteryTemperature)
+                temperature("Battery", value: snapshot.batteryTemperature,
+                            source: batteryTemperatureSource)
                 temperature("SoC", value: snapshot.socTemperature)
-                temperature("Charge IC", value: snapshot.chargerTemperature)
+                temperature("Charge IC", value: snapshot.chargerTemperature,
+                            source: snapshot.hottestSensor(in: .charger).map(sensorSource))
                 temperature("Hottest", value: snapshot.hottestSensor?.value,
-                            source: snapshot.hottestSensor?.name)
+                            source: snapshot.hottestSensor.map(sensorSource))
             }
         }
     }
 
+    private var temperatureWarningsPanel: some View {
+        Panel("Excluded from derived temperatures", systemImage: "exclamationmark.triangle") {
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(snapshot.temperatureWarnings, id: \.self) { warning in
+                    Text(verbatim: warning)
+                        .mwMono(size: 11)
+                        .foregroundStyle(Color.mwMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
+    /// Where the battery figure came from. Usually a HID sensor; on the simulator —
+    /// and anywhere else the registry is not filtered — it is the registry itself,
+    /// which is a different provenance and worth saying so.
+    private var batteryTemperatureSource: Text? {
+        if snapshot.registryTemperature != nil { return Text(verbatim: "IOPMPowerSource") }
+        if snapshot.batteryTemperatureReadings.count > 1 {
+            return Text(verbatim: "median of \(snapshot.batteryTemperatureReadings.count) battery sensors")
+        }
+        return snapshot.hottestSensor(in: .battery).map(sensorSource)
+    }
+
+    // MARK: Zones
+
+    /// How one sensor is labelled: the translated name when we recognise it, with
+    /// the hardware name kept underneath, and the bare hardware name when we do not.
+    private func sensorSource(_ reading: HIDSensors.Reading) -> Text {
+        Text(verbatim: "\(reading.name) · #\(reading.index)")
+    }
+
     private func temperature(_ title: LocalizedStringResource,
-                             value: Double?, source: String? = nil) -> some View {
+                             value: Double?, source: Text? = nil) -> some View {
         Metric(caption: title,
                value: value.map { String(format: "%.1f", $0) } ?? "—",
                unit: "°C",
                tint: value.map { Color.mwTemperature($0) } ?? .primary,
-               footnote: source.map { Text(verbatim: $0) }, size: 24)
+               footnote: source, size: 24)
     }
 
     private func zonePanel(_ group: ZoneTemperatures) -> some View {
@@ -65,7 +108,7 @@ struct ThermalView: View {
                                detail: String(format: "%.1f °C", reading.value),
                                fraction: (reading.value - 20) / 30,
                                tint: .mwTemperature(reading.value),
-                               subtitle: label == nil ? nil : Text(verbatim: reading.name))
+                               subtitle: sensorSource(reading))
                     }
                 }
                 .padding(.top, 14)
@@ -73,8 +116,8 @@ struct ThermalView: View {
                 HStack {
                     Label { Text(group.zone.title) } icon: { Image(systemName: group.zone.symbol) }
                     Spacer()
-                    if let hottest = group.hottest {
-                        Text(verbatim: String(format: "%.1f °C", hottest))
+                    if let representative = group.representative {
+                        Text(verbatim: String(format: "%.1f °C", representative))
                             .monospacedDigit()
                             .foregroundStyle(Color.mwMuted)
                     }

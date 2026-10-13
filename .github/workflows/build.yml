@@ -83,6 +83,9 @@ jobs:
       - name: Check charging protocol evidence
         run: ./scripts/check-charging-protocol.sh
 
+      - name: Check sensor filtering and partial input readings
+        run: ./scripts/check-sensor-readings.sh
+
       - name: Check traffic consumer with local responses
         run: ./scripts/check-traffic-consumer.sh
 
